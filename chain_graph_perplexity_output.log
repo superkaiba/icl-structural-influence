@@ -1,0 +1,171 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+======================================================================
+CHAIN GRAPH-SPECIFIC PERPLEXITY: G1 → G2 → G3 → G4 → G5
+======================================================================
+Measuring: P(same-cluster token | current token) for each graph
+======================================================================
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.39it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:01<00:01,  1.34it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:02<00:00,  1.35it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:02<00:00,  1.94it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:02<00:00,  1.68it/s]
+Graph 1 clusters:
+  0: ['alpha', 'beta', 'foxtrot', 'oscar']
+  1: ['november', 'lima', 'india', 'juliet']
+  2: ['gamma', 'papa', 'echo', 'hotel']
+  3: ['kilo', 'mike', 'delta', 'golf']
+
+Graph 2 clusters:
+  0: ['golf', 'gamma', 'india', 'november']
+  1: ['juliet', 'mike', 'kilo', 'delta']
+  2: ['alpha', 'papa', 'oscar', 'foxtrot']
+  3: ['lima', 'hotel', 'beta', 'echo']
+
+Graph 3 clusters:
+  0: ['beta', 'november', 'india', 'foxtrot']
+  1: ['echo', 'oscar', 'alpha', 'hotel']
+  2: ['delta', 'golf', 'gamma', 'mike']
+  3: ['lima', 'juliet', 'papa', 'kilo']
+
+Graph 4 clusters:
+  0: ['alpha', 'foxtrot', 'gamma', 'oscar']
+  1: ['mike', 'hotel', 'echo', 'kilo']
+  2: ['lima', 'juliet', 'november', 'papa']
+  3: ['delta', 'beta', 'golf', 'india']
+
+Graph 5 clusters:
+  0: ['oscar', 'kilo', 'echo', 'papa']
+  1: ['foxtrot', 'india', 'juliet', 'november']
+  2: ['beta', 'delta', 'alpha', 'gamma']
+  3: ['hotel', 'mike', 'lima', 'golf']
+
+
+Chain structure: G1(1000) → G2(1000) → G3(1000) → G4(1000) → G5(1000)
+Sampling at 99 positions...
+  Position 50 (G1)... G1 ratio=0.409
+  Position 100 (G1)... G1 ratio=0.244
+  Position 150 (G1)... G1 ratio=0.320
+  Position 200 (G1)... G1 ratio=0.251
+  Position 250 (G1)... G1 ratio=0.214
+  Position 300 (G1)... G1 ratio=0.385
+  Position 350 (G1)... G1 ratio=0.320
+  Position 400 (G1)... G1 ratio=0.336
+  Position 450 (G1)... G1 ratio=0.241
+  Position 500 (G1)... G1 ratio=0.274
+  Position 550 (G1)... G1 ratio=0.327
+  Position 600 (G1)... G1 ratio=0.356
+  Position 650 (G1)... G1 ratio=0.216
+  Position 700 (G1)... G1 ratio=0.306
+  Position 750 (G1)... G1 ratio=0.386
+  Position 800 (G1)... G1 ratio=0.134
+  Position 850 (G1)... G1 ratio=0.238
+  Position 900 (G1)... G1 ratio=0.211
+  Position 950 (G1)... G1 ratio=0.342
+  Position 1000 (G2)... G2 ratio=0.287
+  Position 1050 (G2)... G2 ratio=0.133
+  Position 1100 (G2)... G2 ratio=0.343
+  Position 1150 (G2)... G2 ratio=0.154
+  Position 1200 (G2)... G2 ratio=0.292
+  Position 1250 (G2)... G2 ratio=0.333
+  Position 1300 (G2)... G2 ratio=0.194
+  Position 1350 (G2)... G2 ratio=0.203
+  Position 1400 (G2)... G2 ratio=0.341
+  Position 1450 (G2)... G2 ratio=0.192
+  Position 1500 (G2)... G2 ratio=0.244
+  Position 1550 (G2)... G2 ratio=0.299
+  Position 1600 (G2)... G2 ratio=0.249
+  Position 1650 (G2)... G2 ratio=0.218
+  Position 1700 (G2)... G2 ratio=0.397
+  Position 1750 (G2)... G2 ratio=0.285
+  Position 1800 (G2)... G2 ratio=0.310
+  Position 1850 (G2)... G2 ratio=0.248
+  Position 1900 (G2)... G2 ratio=0.222
+  Position 1950 (G2)... G2 ratio=0.187
+  Position 2000 (G3)... G3 ratio=0.265
+  Position 2050 (G3)... G3 ratio=0.315
+  Position 2100 (G3)... G3 ratio=0.196
+  Position 2150 (G3)... G3 ratio=0.289
+  Position 2200 (G3)... G3 ratio=0.370
+  Position 2250 (G3)... G3 ratio=0.214
+  Position 2300 (G3)... G3 ratio=0.221
+  Position 2350 (G3)... G3 ratio=0.190
+  Position 2400 (G3)... G3 ratio=0.252
+  Position 2450 (G3)... G3 ratio=0.287
+  Position 2500 (G3)... G3 ratio=0.203
+  Position 2550 (G3)... G3 ratio=0.284
+  Position 2600 (G3)... G3 ratio=0.334
+  Position 2650 (G3)... G3 ratio=0.210
+  Position 2700 (G3)... G3 ratio=0.306
+  Position 2750 (G3)... G3 ratio=0.229
+  Position 2800 (G3)... G3 ratio=0.253
+  Position 2850 (G3)... G3 ratio=0.391
+  Position 2900 (G3)... G3 ratio=0.262
+  Position 2950 (G3)... G3 ratio=0.339
+  Position 3000 (G4)... G4 ratio=0.250
+  Position 3050 (G4)... G4 ratio=0.208
+  Position 3100 (G4)... G4 ratio=0.146
+  Position 3150 (G4)... G4 ratio=0.200
+  Position 3200 (G4)... G4 ratio=0.372
+  Position 3250 (G4)... G4 ratio=0.273
+  Position 3300 (G4)... G4 ratio=0.195
+  Position 3350 (G4)... G4 ratio=0.339
+  Position 3400 (G4)... G4 ratio=0.237
+  Position 3450 (G4)... G4 ratio=0.203
+  Position 3500 (G4)... G4 ratio=0.335
+  Position 3550 (G4)... G4 ratio=0.215
+  Position 3600 (G4)... G4 ratio=0.216
+  Position 3650 (G4)... G4 ratio=0.227
+  Position 3700 (G4)... G4 ratio=0.219
+  Position 3750 (G4)... G4 ratio=0.333
+  Position 3800 (G4)... G4 ratio=0.322
+  Position 3850 (G4)... G4 ratio=0.163
+  Position 3900 (G4)... G4 ratio=0.233
+  Position 3950 (G4)... G4 ratio=0.270
+  Position 4000 (G5)... G5 ratio=0.225
+  Position 4050 (G5)... G5 ratio=0.337
+  Position 4100 (G5)... G5 ratio=0.224
+  Position 4150 (G5)... G5 ratio=0.227
+  Position 4200 (G5)... G5 ratio=0.214
+  Position 4250 (G5)... G5 ratio=0.286
+  Position 4300 (G5)... G5 ratio=0.258
+  Position 4350 (G5)... G5 ratio=0.250
+  Position 4400 (G5)... G5 ratio=0.255
+  Position 4450 (G5)... G5 ratio=0.273
+  Position 4500 (G5)... G5 ratio=0.272
+  Position 4550 (G5)... G5 ratio=0.279
+  Position 4600 (G5)... G5 ratio=0.270
+  Position 4650 (G5)... G5 ratio=0.302
+  Position 4700 (G5)... G5 ratio=0.234
+  Position 4750 (G5)... G5 ratio=0.388
+  Position 4800 (G5)... G5 ratio=0.233
+  Position 4850 (G5)... G5 ratio=0.339
+  Position 4900 (G5)... G5 ratio=0.191
+  Position 4950 (G5)... wandb: Currently logged in as: thomasjiralerspong to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run x98wqgg0
+wandb: Tracking run with wandb version 0.23.1
+wandb: Run data is saved locally in /workspace/research/projects/in_context_representation_influence/wandb/run-20260107_055656-x98wqgg0
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run chain-graph-specific-perplexity
+wandb: ⭐️ View project at https://wandb.ai/thomasjiralerspong/icl-structural-influence
+wandb: 🚀 View run at https://wandb.ai/thomasjiralerspong/icl-structural-influence/runs/x98wqgg0
+wandb: updating run metadata; uploading data; uploading requirements.txt
+wandb: uploading media/html/graph_perplexity_0_44db09ff4399140a2abb.html; uploading media/html/graph_perplexity_transitions_0_f86545f29da3f34b539b.html; uploading config.yaml
+wandb: 🚀 View run chain-graph-specific-perplexity at: https://wandb.ai/thomasjiralerspong/icl-structural-influence/runs/x98wqgg0
+wandb: ⭐️ View project at: https://wandb.ai/thomasjiralerspong/icl-structural-influence
+wandb: Synced 6 W&B file(s), 2 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260107_055656-x98wqgg0/logs
+G5 ratio=0.292
+
+======================================================================
+Creating visualization...
+Saved: results/context_switch/chain_graph_perplexity.html
+Saved: results/context_switch/chain_graph_perplexity_transitions.html
+Saved: results/context_switch/chain_graph_perplexity_results.json
+
+Logging to W&B...
+Run URL: https://wandb.ai/thomasjiralerspong/icl-structural-influence/runs/x98wqgg0
+
+======================================================================
+SUMMARY
+======================================================================
+For each graph Gi, we measure P(same-cluster token) / P(all 16 tokens)
+- Random baseline: 3/15 ≈ 0.2 (3 same-cluster tokens out of 15 others)
+- High ratio = model has learned that graph's clustering structure
+- The ACTIVE graph should have highest ratio in its region
+======================================================================

@@ -1,0 +1,107 @@
+{
+  "models_analyzed": [
+    "Qwen3-14B",
+    "Mistral-Nemo-12B",
+    "LLaMA-3.1-8B",
+    "Qwen2.5-7B"
+  ],
+  "model_comparisons": {
+    "Qwen3-14B": {
+      "n_layers": 40,
+      "hidden_size": 5120,
+      "context_lengths_tested": [
+        10,
+        20,
+        30,
+        50,
+        75,
+        100,
+        150,
+        200
+      ],
+      "dirichlet_range": [
+        37479628.8,
+        79046430.72
+      ],
+      "potential_phase_transition_at": 175.0,
+      "peak_rate_of_change": 0.6970428759115366,
+      "overall_trend_slope": 0.24910031636312444,
+      "final_coherence": 0.12825570089240393
+    },
+    "Mistral-Nemo-12B": {
+      "n_layers": 40,
+      "hidden_size": 5120,
+      "context_lengths_tested": [
+        10,
+        20,
+        30,
+        50,
+        75,
+        100,
+        150,
+        200
+      ],
+      "dirichlet_range": [
+        381620.48,
+        1380277.76
+      ],
+      "potential_phase_transition_at": 175.0,
+      "peak_rate_of_change": 0.6664068299855207,
+      "overall_trend_slope": 0.42914830464409115,
+      "final_coherence": 0.1317337973915424
+    },
+    "LLaMA-3.1-8B": {
+      "n_layers": 32,
+      "hidden_size": 4096,
+      "context_lengths_tested": [
+        10,
+        20,
+        30,
+        50,
+        75,
+        100,
+        150,
+        200
+      ],
+      "dirichlet_range": [
+        50581.28,
+        143169.78
+      ],
+      "potential_phase_transition_at": 175.0,
+      "peak_rate_of_change": 0.42411099991980594,
+      "overall_trend_slope": 0.3473106260377183,
+      "final_coherence": 0.12819881218354306
+    },
+    "Qwen2.5-7B": {
+      "n_layers": 28,
+      "hidden_size": 3584,
+      "context_lengths_tested": [
+        10,
+        20,
+        30,
+        50,
+        75,
+        100,
+        150,
+        200
+      ],
+      "dirichlet_range": [
+        2629053.44,
+        10718499.84
+      ],
+      "potential_phase_transition_at": 175.0,
+      "peak_rate_of_change": 1.590564749398419,
+      "overall_trend_slope": 0.4691164645439516,
+      "final_coherence": 0.12661553910651743
+    }
+  },
+  "key_findings": [
+    "Qwen2.5-7B: Strong phase transition signal at N\u2248175 (rate=1.59)"
+  ],
+  "conclusions": [
+    "Hierarchical Learning Hypothesis: Evidence suggests models exhibit non-monotonic structural emergence",
+    "Phase transitions in representation geometry appear to occur in the N=15-50 range",
+    "Dirichlet energy (structural complexity) generally increases with context length",
+    "Cluster separation (global structure) emerges before local coherence refinement"
+  ]
+}

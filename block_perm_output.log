@@ -1,0 +1,25 @@
+================================================================================
+BLOCK PERMUTATION EXPERIMENT
+================================================================================
+Model: gpt2
+Context lengths: [10, 20, 50, 100]
+Samples per condition: 30
+Layer: -5
+Random seed: 42
+
+Graph: 15 nodes, 3 clusters
+
+Loading model...
+Traceback (most recent call last):
+  File "/workspace/research/projects/in_context_representation_influence/run_block_permutation_experiment.py", line 504, in <module>
+    results = run_experiment(
+              ^^^^^^^^^^^^^^^
+  File "/workspace/research/projects/in_context_representation_influence/run_block_permutation_experiment.py", line 246, in run_experiment
+    model = HookedLLM.from_pretrained(model_name)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/research/projects/in_context_representation_influence/src/models/hooked_model.py", line 188, in from_pretrained
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+ModuleNotFoundError: No module named 'transformers'
+Starting block permutation experiment...
+Command: /usr/bin/python run_block_permutation_experiment.py --model gpt2 --context-lengths 10,20,50,100 --n-samples 30 --seed 42
+

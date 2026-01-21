@@ -1,0 +1,171 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+======================================================================
+CHAIN PERPLEXITY EXPERIMENT: G1 → G2 → G3 → G4 → G5
+======================================================================
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.24it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:01<00:01,  1.22it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:02<00:00,  1.25it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:02<00:00,  1.80it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:02<00:00,  1.54it/s]
+Graph 1 clusters:
+  0: ['alpha', 'beta', 'foxtrot', 'oscar']
+  1: ['november', 'lima', 'india', 'juliet']
+  2: ['gamma', 'papa', 'echo', 'hotel']
+  3: ['kilo', 'mike', 'delta', 'golf']
+
+Graph 2 clusters:
+  0: ['golf', 'gamma', 'india', 'november']
+  1: ['juliet', 'mike', 'kilo', 'delta']
+  2: ['alpha', 'papa', 'oscar', 'foxtrot']
+  3: ['lima', 'hotel', 'beta', 'echo']
+
+Graph 3 clusters:
+  0: ['beta', 'november', 'india', 'foxtrot']
+  1: ['echo', 'oscar', 'alpha', 'hotel']
+  2: ['delta', 'golf', 'gamma', 'mike']
+  3: ['lima', 'juliet', 'papa', 'kilo']
+
+Graph 4 clusters:
+  0: ['alpha', 'foxtrot', 'gamma', 'oscar']
+  1: ['mike', 'hotel', 'echo', 'kilo']
+  2: ['lima', 'juliet', 'november', 'papa']
+  3: ['delta', 'beta', 'golf', 'india']
+
+Graph 5 clusters:
+  0: ['oscar', 'kilo', 'echo', 'papa']
+  1: ['foxtrot', 'india', 'juliet', 'november']
+  2: ['beta', 'delta', 'alpha', 'gamma']
+  3: ['hotel', 'mike', 'lima', 'golf']
+
+
+Chain structure: G1(1000) → G2(1000) → G3(1000) → G4(1000) → G5(1000)
+Total length: 5000
+Boundaries: [0, 1000, 2000, 3000, 4000, 5000]
+
+Sampling perplexity at 101 positions...
+  Position 100 (G1)... ppl=12.86
+  Position 200 (G1)... ppl=14.29
+  Position 300 (G1)... ppl=14.14
+  Position 400 (G1)... ppl=14.17
+  Position 500 (G1)... ppl=13.33
+  Position 600 (G1)... ppl=11.93
+  Position 700 (G1)... ppl=13.76
+  Position 800 (G1)... ppl=12.16
+  Position 900 (G1)... ppl=12.96
+  Position 980 (G1)... ppl=13.03
+  Position 985 (G1)... ppl=12.56
+  Position 990 (G1)... ppl=12.33
+  Position 995 (G1)... ppl=13.59
+  Position 1000 (G2)... ppl=13.71
+  Position 1005 (G2)... ppl=12.03
+  Position 1010 (G2)... ppl=13.47
+  Position 1015 (G2)... ppl=12.49
+  Position 1020 (G2)... ppl=12.89
+  Position 1025 (G2)... ppl=13.06
+  Position 1030 (G2)... ppl=13.69
+  Position 1035 (G2)... ppl=13.10
+  Position 1040 (G2)... ppl=14.93
+  Position 1045 (G2)... ppl=11.74
+  Position 1100 (G2)... ppl=12.84
+  Position 1200 (G2)... ppl=13.74
+  Position 1300 (G2)... ppl=13.28
+  Position 1400 (G2)... ppl=12.86
+  Position 1500 (G2)... ppl=12.44
+  Position 1600 (G2)... ppl=12.76
+  Position 1700 (G2)... ppl=12.40
+  Position 1800 (G2)... ppl=12.89
+  Position 1900 (G2)... ppl=15.21
+  Position 1980 (G2)... ppl=13.07
+  Position 1985 (G2)... ppl=14.41
+  Position 1990 (G2)... ppl=12.76
+  Position 1995 (G2)... ppl=13.48
+  Position 2000 (G3)... ppl=13.59
+  Position 2005 (G3)... ppl=13.38
+  Position 2010 (G3)... ppl=12.52
+  Position 2015 (G3)... ppl=12.96
+  Position 2020 (G3)... ppl=12.34
+  Position 2025 (G3)... ppl=13.12
+  Position 2030 (G3)... ppl=13.88
+  Position 2035 (G3)... ppl=13.60
+  Position 2040 (G3)... ppl=14.74
+  Position 2045 (G3)... ppl=14.81
+  Position 2100 (G3)... ppl=12.16
+  Position 2200 (G3)... ppl=13.19
+  Position 2300 (G3)... ppl=14.03
+  Position 2400 (G3)... ppl=13.26
+  Position 2500 (G3)... ppl=13.10
+  Position 2600 (G3)... ppl=13.12
+  Position 2700 (G3)... ppl=13.43
+  Position 2800 (G3)... ppl=13.95
+  Position 2900 (G3)... ppl=13.18
+  Position 2980 (G3)... ppl=13.31
+  Position 2985 (G3)... ppl=11.61
+  Position 2990 (G3)... ppl=12.44
+  Position 2995 (G3)... ppl=12.04
+  Position 3000 (G4)... ppl=13.26
+  Position 3005 (G4)... ppl=11.91
+  Position 3010 (G4)... ppl=13.26
+  Position 3015 (G4)... ppl=13.89
+  Position 3020 (G4)... ppl=13.67
+  Position 3025 (G4)... ppl=12.96
+  Position 3030 (G4)... ppl=12.96
+  Position 3035 (G4)... ppl=12.94
+  Position 3040 (G4)... ppl=14.48
+  Position 3045 (G4)... ppl=14.51
+  Position 3100 (G4)... ppl=14.88
+  Position 3200 (G4)... ppl=12.57
+  Position 3300 (G4)... ppl=13.66
+  Position 3400 (G4)... ppl=14.03
+  Position 3500 (G4)... ppl=13.31
+  Position 3600 (G4)... ppl=13.01
+  Position 3700 (G4)... ppl=11.84
+  Position 3800 (G4)... ppl=12.84
+  Position 3900 (G4)... ppl=12.50
+  Position 3980 (G4)... ppl=11.81
+  Position 3985 (G4)... ppl=13.55
+  Position 3990 (G4)... ppl=13.09
+  Position 3995 (G4)... ppl=13.27
+  Position 4000 (G5)... ppl=13.32
+  Position 4005 (G5)... ppl=12.66
+  Position 4010 (G5)... ppl=13.27
+  Position 4015 (G5)... ppl=13.00
+  Position 4020 (G5)... ppl=13.46
+  Position 4025 (G5)... ppl=11.51
+  Position 4030 (G5)... ppl=13.32
+  Position 4035 (G5)... ppl=13.78
+  Position 4040 (G5)... ppl=12.28
+  Position 4045 (G5)... ppl=13.43
+  Position 4100 (G5)... ppl=12.33
+  Position 4200 (G5)... ppl=13.49
+  Position 4300 (G5)... ppl=13.40
+  Position 4400 (G5)... ppl=12.22
+  Position 4500 (G5)... ppl=13.46
+  Position 4600 (G5)... ppl=12.91
+  Position 4700 (G5)... ppl=12.29
+  Position 4800 (G5)... ppl=13.68
+  Position 4900 (G5)... wandb: Currently logged in as: thomasjiralerspong to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.23.1
+wandb: Run data is saved locally in /workspace/research/projects/in_context_representation_influence/wandb/run-20260107_012416-67t9uknz
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run chain-perplexity-experiment
+wandb: ⭐️ View project at https://wandb.ai/thomasjiralerspong/icl-structural-influence
+wandb: 🚀 View run at https://wandb.ai/thomasjiralerspong/icl-structural-influence/runs/67t9uknz
+wandb: updating run metadata; uploading requirements.txt
+wandb: uploading media/html/chain_perplexity_0_aab0c51afcacf19f1f58.html; uploading media/html/chain_perplexity_transitions_0_3a98aec17fa4fdb5f961.html
+wandb: 🚀 View run chain-perplexity-experiment at: https://wandb.ai/thomasjiralerspong/icl-structural-influence/runs/67t9uknz
+wandb: ⭐️ View project at: https://wandb.ai/thomasjiralerspong/icl-structural-influence
+wandb: Synced 6 W&B file(s), 2 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260107_012416-67t9uknz/logs
+ppl=12.59
+
+======================================================================
+Creating visualization...
+Saved: results/context_switch/chain_perplexity.html
+Saved: results/context_switch/chain_perplexity_transitions.html
+Saved: results/context_switch/chain_perplexity_results.json
+
+Logging to W&B...
+Run URL: https://wandb.ai/thomasjiralerspong/icl-structural-influence/runs/67t9uknz
+
+======================================================================
+SUMMARY
+======================================================================
+Perplexity should spike at graph transitions as the model
+encounters a new statistical structure that contradicts learned patterns.
+======================================================================
