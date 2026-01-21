@@ -2,7 +2,7 @@
 
 **Date**: 2026-01-21
 **Model**: Qwen/Qwen2.5-7B (28 layers)
-**W&B Run**: https://wandb.ai/thomasjiralerspong/icl-structural-influence/runs/cy6zkda4
+**W&B Run**: https://wandb.ai/thomasjiralerspong/icl-structural-influence/runs/qfwyoros
 
 ## Objective
 
@@ -26,35 +26,35 @@ Test Leave-One-Out (LOO) influence across all model layers with the newly implem
 ## Figures
 
 ### All Metrics Heatmap
-![All metrics comparison across layers and context lengths](../results/loo_multilayer/heatmap_all_metrics.png)
+![All metrics comparison across layers and context lengths](../results/loo_multilayer_qwen/heatmap_all_metrics.png)
 
 Combined view of all LOO influence metrics (ratio, energy, cross-distance, within-distance) across layers and context lengths for both semantic and unrelated token conditions.
 
 ### Ratio Influence Heatmap
-![Ratio influence by layer and context length](../results/loo_multilayer/heatmap_ratio_influence.png)
+![Ratio influence by layer and context length](../results/loo_multilayer_qwen/heatmap_ratio_influence.png)
 
 LOO influence on the cluster separation ratio (cross-cluster / within-cluster distance). Positive values indicate removing the token hurts structure.
 
 ### Energy Influence Heatmap
-![Dirichlet energy influence by layer and context length](../results/loo_multilayer/heatmap_energy_influence.png)
+![Dirichlet energy influence by layer and context length](../results/loo_multilayer_qwen/heatmap_energy_influence.png)
 
 LOO influence on Dirichlet energy. Positive values indicate removing the token increases energy (hurts structural alignment).
 
 ### Cross-Distance Influence Heatmap
-![Cross-cluster distance influence](../results/loo_multilayer/heatmap_cross_dist_influence.png)
+![Cross-cluster distance influence](../results/loo_multilayer_qwen/heatmap_cross_dist_influence.png)
 
 LOO influence on mean cross-cluster distance component.
 
 ### Within-Distance Influence Heatmap
-![Within-cluster distance influence](../results/loo_multilayer/heatmap_within_dist_influence.png)
+![Within-cluster distance influence](../results/loo_multilayer_qwen/heatmap_within_dist_influence.png)
 
 LOO influence on mean within-cluster distance component.
 
 ## Raw Data
 
-- Results JSON (semantic): `results/loo_multilayer/results_semantic.json`
-- Results JSON (unrelated): `results/loo_multilayer/results_unrelated.json`
-- Checkpoints: `results/loo_multilayer/checkpoint_*.json`
+- Results JSON (semantic): `results/loo_multilayer_qwen/results_semantic.json`
+- Results JSON (unrelated): `results/loo_multilayer_qwen/results_unrelated.json`
+- Checkpoints: `results/loo_multilayer_qwen/checkpoint_*.json`
 
 ## Code Changes
 

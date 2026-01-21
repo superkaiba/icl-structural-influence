@@ -10,7 +10,22 @@ import numpy as np
 
 
 def main():
-    results_dir = Path("results/loo_multilayer")
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", type=str, default="qwen", choices=["qwen", "llama"],
+                        help="Model to log results for")
+    args = parser.parse_args()
+
+    if args.model == "qwen":
+        results_dir = Path("results/loo_multilayer_qwen")
+        model_name = "Qwen/Qwen2.5-7B"
+        model_tag = "qwen2.5-7b"
+        num_layers = 28
+    else:
+        results_dir = Path("results/loo_multilayer_llama")
+        model_name = "meta-llama/Llama-3.1-8B"
+        model_tag = "llama3.1-8b"
+        num_layers = 32
 
     # Load results
     with open(results_dir / "results_semantic.json") as f:
@@ -22,17 +37,20 @@ def main():
     # Initialize W&B
     run = wandb.init(
         project="icl-structural-influence",
-        name="multilayer-loo-influence",
+        name=f"multilayer-loo-{args.model}",
         config={
             "experiment": "multilayer-loo-influence",
+            "model": model_name,
+            "num_layers": num_layers,
             "context_lengths": semantic_results["context_lengths"],
             "layers_tested": semantic_results["layers_tested"],
             "n_trials": semantic_results["n_trials"],
             "conditions": ["semantic", "unrelated"],
             "metrics": ["ratio_influence", "energy_influence", "cross_dist_influence", "within_dist_influence"],
             "token_types": ["bridge", "anchor"],
+            "bounded_phi": True,  # Using relative epsilon for bounded ratio
         },
-        tags=["loo", "multilayer", "heatmap", "semantic-conflict", "llama3-8b"],
+        tags=["loo", "multilayer", "heatmap", "semantic-conflict", model_tag, "bounded-phi"],
     )
 
     # Log all heatmap images
@@ -116,12 +134,18 @@ def main():
                     wandb.log(log_data)
 
     # Add comprehensive summary notes
-    wandb.run.notes = """
+    notes = f"""
 # Multi-Layer LOO Influence Analysis
 
 ## Experiment Overview
 
-This experiment measures Leave-One-Out (LOO) influence across **all layers** of Llama-3-8B to understand how structural influence evolves through the network's depth.
+This experiment measures Leave-One-Out (LOO) influence across **all {num_layers} layers** of {model_name} to understand how structural influence evolves through the network's depth.
+
+## Bounded Phi Metric
+
+Uses relative epsilon (eps=1e-3) to bound the cluster separation ratio, preventing extreme values when within-cluster distances approach zero. Maximum ratio ~1000."""
+
+    notes += """
 
 ## Key Innovation: Efficient Multi-Layer Extraction
 
@@ -241,6 +265,7 @@ This extends our previous LOO metric comparison experiment:
 3. Is there a phase transition layer where structural influence emerges?
 4. Do semantic vs unrelated conditions diverge more at specific layers?
 """
+    wandb.run.notes = notes
 
     wandb.finish()
 
