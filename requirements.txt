@@ -2,38 +2,24 @@
 # Core dependencies for mechanistic interpretability research
 
 # Deep Learning
-torch>=2.0.0
-transformers>=4.36.0
+torch>=2.0.0,<3.0.0
+transformers>=4.36.0,<5.0.0
 
 # Scientific Computing
-numpy>=1.24.0
-scipy>=1.10.0
+numpy>=1.24.0,<2.0.0
+scipy>=1.10.0,<2.0.0
 
 # Graph Processing
-networkx>=3.0
+networkx>=3.0,<4.0
 
 # Visualization
-matplotlib>=3.7.0
-imageio>=2.9.0
+matplotlib>=3.7.0,<4.0.0
+imageio>=2.9.0,<3.0.0
 imageio-ffmpeg  # Optional: for video output
-tqdm>=4.65.0
+tqdm>=4.65.0,<5.0.0
 
-# Optional: Dimensionality reduction for GIF animations
-# umap-learn>=0.5.0  # For UMAP visualization
-# scikit-learn>=1.3.0  # For MDS, PCA, t-SNE
+# Optional: Dimensionality reduction
+scikit-learn>=1.3.0,<2.0.0
 
-# Optional: Advanced interpretability tools
-# transformer-lens>=1.0.0  # For TransformerLens hook utilities
-# nnsight>=0.2.0           # For nnsight-based activation extraction
-
-# Optional: Timaeus devinterp for SGLD sampling
-# devinterp>=0.3.0         # pip install devinterp
-
-# Experiment tracking (optional)
-# wandb>=0.15.0
-# tqdm>=4.65.0
-
-# Development
-# pytest>=7.0.0
-# black>=23.0.0
-# ruff>=0.0.280
+# Optional: Experiment tracking
+wandb>=0.15.0,<1.0.0

@@ -21,26 +21,26 @@ CSS is a correlational measure, NOT causal influence (true BIF requires SGLD wei
 pip install -r requirements.txt
 
 # Main experiment - full pipeline
-python run_experiment.py --model meta-llama/Meta-Llama-3-8B --n-contexts 100
+python experiments/core/run_experiment.py --model meta-llama/Meta-Llama-3-8B --n-contexts 100
 
 # Quick test with smaller model
-python run_experiment.py --model gpt2 --n-contexts 10 --layers 0,5,11
+python experiments/core/run_experiment.py --model gpt2 --n-contexts 10 --layers 0,5,11
 
 # Hierarchical learning analysis
-python run_hierarchical_experiment.py
+python experiments/core/run_hierarchical_experiment.py
 
 # Deep hierarchy (3-4 levels) with stagewise learning
-python run_deep_hierarchy_experiment.py --model gpt2 --context-lengths 10,20,30 --n-contexts 5
+python experiments/core/run_deep_hierarchy_experiment.py --model gpt2 --context-lengths 10,20,30 --n-contexts 5
 
 # Leave-one-out influence experiments
-python leave_one_out_experiment.py --use-semantic-tokens
-python run_multilayer_loo_experiment.py  # All 32 layers, ~7-8 hours
+python experiments/core/leave_one_out_experiment.py --use-semantic-tokens
+python experiments/core/run_multilayer_loo_experiment.py  # All 32 layers, ~7-8 hours
 
 # Lee et al. replication experiments
-python run_lee_et_al_experiments.py
+python experiments/reproductions/run_lee_et_al_experiments.py
 
 # Park et al. reproduction
-python reproduce_park_et_al.py
+python experiments/reproductions/reproduce_park_et_al.py
 
 # Long-running experiments (with checkpoints)
 bash run_full_multilayer_experiment.sh  # Runs experiment with checkpoint saves
@@ -99,6 +99,14 @@ result = css.compute_batch(representations, losses, cluster_labels, n_contexts=1
 
 ## Experiment Workflow
 
+**Directory Organization** (under `experiments/`):
+- `experiments/core/` - Main research experiment scripts
+- `experiments/reproductions/` - Paper reproduction scripts (Park, Lee et al.)
+- `experiments/analysis/` - Comparison and analysis scripts
+- `experiments/plotting/` - Visualization scripts
+- `experiments/logging/` - W&B logging utilities
+- `experiments/deprecated/` - Old versions (preserved for reference)
+
 **Naming Patterns**:
 - `run_*.py` - Main experiment scripts that generate data
 - `log_*_to_wandb.py` - Upload experiment results to Weights & Biases
@@ -114,7 +122,7 @@ result = css.compute_batch(representations, losses, cluster_labels, n_contexts=1
 **Results Organization**:
 - `results/` - Experiment outputs organized by experiment type (subdirectories)
 - `wandb/` - Weights & Biases run histories and artifacts
-- `experiments/` - Markdown summaries of completed experiments with embedded figures
+- `experiments/*.md` - Markdown summaries of completed experiments with embedded figures
 - `docs/` - Additional experiment documentation
 
 ## Experiment Summaries
@@ -181,3 +189,17 @@ Primary: `meta-llama/Meta-Llama-3-8B` (8B), also tested with `Qwen2.5-7B`, `Mist
 ## Hardware Notes
 
 Experiments run on NVIDIA A40 (48GB) GPUs. 8B models require significant VRAM - use `--dtype bfloat16` for efficiency.
+
+## Implementation Guidelines
+
+**Test and Run**: When implementing new code, always:
+1. Run syntax checks (`python -m py_compile <file>`) on created files
+2. Verify imports work correctly
+3. Run any demo functions or basic tests
+4. If tests pass, run the actual experiment/script to verify it works end-to-end
+
+**Specification Changes**: If during implementation something comes up that requires deviating from the original specifications or plan:
+- **STOP** implementation
+- **ASK** for clarification from the user before proceeding
+- Do not make assumptions about what changes are acceptable
+- Explain what the issue is and what options exist

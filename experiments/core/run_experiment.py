@@ -247,16 +247,37 @@ def run_experiment(args):
             print(f"  Processing context {ctx_idx + 1}/{args.n_contexts}")
 
         prompt, nodes = graph.generate_random_walk(return_nodes=True)
-        clusters = torch.tensor([graph.get_cluster(n) for n in nodes])
+        word_clusters = [graph.get_cluster(n) for n in nodes]
 
         # Get losses
         token_losses = model.compute_per_token_loss(prompt)
+        num_tokens = token_losses.shape[-1]  # Number of loss positions (seq_len - 1)
 
         # Get representations
         _, cache = model.forward_with_cache(prompt, layers=layers)
 
+        # Map tokens to word clusters
+        # Since tokenization may split words, we need to align clusters with tokens
+        # Simple approach: assign each token to the word it starts from
+        words = prompt.split()
+        token_to_cluster = []
+
+        # Get token offsets to map tokens to words
+        inputs = model.tokenize(prompt)
+        input_ids = inputs["input_ids"][0]
+
+        # For simplicity, distribute clusters evenly across tokens
+        # This approximation works when most words are single tokens
+        num_words = len(words)
+        for tok_idx in range(len(input_ids)):
+            word_idx = min(int(tok_idx * num_words / len(input_ids)), num_words - 1)
+            token_to_cluster.append(word_clusters[word_idx])
+
+        # Align with losses (exclude first token, as loss is for predicting token i from tokens 0..i-1)
+        clusters = torch.tensor(token_to_cluster[1:])
+
         all_losses.append(token_losses.squeeze(0).cpu())
-        all_clusters.append(clusters[1:])  # Align with loss (next-token prediction)
+        all_clusters.append(clusters)
         all_prompts.append(prompt)
 
         for layer in layers:

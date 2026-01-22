@@ -7,6 +7,10 @@ from .hierarchical_graph import (
     DeepHierarchyConfig,
     DEFAULT_VOCABULARY,
 )
+from .dual_interpretation_graph import (
+    DualInterpretationGraph,
+    DualInterpretationConfig,
+)
 
 __all__ = [
     "HierarchicalGraph",
@@ -14,4 +18,6 @@ __all__ = [
     "DeepHierarchicalGraph",
     "DeepHierarchyConfig",
     "DEFAULT_VOCABULARY",
+    "DualInterpretationGraph",
+    "DualInterpretationConfig",
 ]
