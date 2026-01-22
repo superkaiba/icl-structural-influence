@@ -17,34 +17,34 @@ CSS is a correlational measure, NOT causal influence (true BIF requires SGLD wei
 ## Commands
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+# Install dependencies (using uv)
+uv sync
 
 # Main experiment - full pipeline
-python experiments/core/run_experiment.py --model meta-llama/Meta-Llama-3-8B --n-contexts 100
+uv run python experiments/core/run_experiment.py --model meta-llama/Meta-Llama-3-8B --n-contexts 100
 
 # Quick test with smaller model
-python experiments/core/run_experiment.py --model gpt2 --n-contexts 10 --layers 0,5,11
+uv run python experiments/core/run_experiment.py --model gpt2 --n-contexts 10 --layers 0,5,11
 
 # Hierarchical learning analysis
-python experiments/core/run_hierarchical_experiment.py
+uv run python experiments/core/run_hierarchical_experiment.py
 
 # Deep hierarchy (3-4 levels) with stagewise learning
-python experiments/core/run_deep_hierarchy_experiment.py --model gpt2 --context-lengths 10,20,30 --n-contexts 5
+uv run python experiments/core/run_deep_hierarchy_experiment.py --model gpt2 --context-lengths 10,20,30 --n-contexts 5
 
 # Leave-one-out influence experiments
-python experiments/core/leave_one_out_experiment.py --use-semantic-tokens
-python experiments/core/run_multilayer_loo_experiment.py  # All 32 layers, ~7-8 hours
+uv run python experiments/core/leave_one_out_experiment.py --use-semantic-tokens
+uv run python experiments/core/run_multilayer_loo_experiment.py  # All 32 layers, ~7-8 hours
 
 # Lee et al. replication experiments
-python experiments/reproductions/run_lee_et_al_experiments.py
+uv run python experiments/reproductions/run_lee_et_al_experiments.py
 
 # Park et al. reproduction
-python experiments/reproductions/reproduce_park_et_al.py
+uv run python experiments/reproductions/reproduce_park_et_al.py
 
 # Long-running experiments (with checkpoints)
-bash run_full_multilayer_experiment.sh  # Runs experiment with checkpoint saves
-bash monitor_full_experiment.sh         # Monitor progress of running experiment
+bash scripts/run_full_multilayer_experiment.sh  # Runs experiment with checkpoint saves
+bash scripts/monitor_full_experiment.sh         # Monitor progress of running experiment
 ```
 
 ## Architecture

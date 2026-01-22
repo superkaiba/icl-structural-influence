@@ -8,15 +8,15 @@ This project bridges [Park et al. (2024) "In-Context Learning of Representations
 
 ```bash
 # Clone and install
-git clone <repository-url>
-cd in_context_representation_influence
-pip install -r requirements.txt
+git clone https://github.com/superkaiba/icl-structural-influence.git
+cd icl-structural-influence
+uv sync
 
 # Run a quick test
-python experiments/core/run_experiment.py --model gpt2 --n-contexts 10 --layers 0,5,11
+uv run python experiments/core/run_experiment.py --model gpt2 --n-contexts 10 --layers 0,5,11
 
 # Run with a larger model
-python experiments/core/run_experiment.py --model meta-llama/Meta-Llama-3-8B --n-contexts 100
+uv run python experiments/core/run_experiment.py --model meta-llama/Meta-Llama-3-8B --n-contexts 100
 ```
 
 ## Core Concept
@@ -39,21 +39,34 @@ CSS is a **correlational** measure (true causal BIF requires SGLD weight-space s
 
 ### Requirements
 - Python 3.10+
+- [uv](https://docs.astral.sh/uv/) (recommended) or pip
 - CUDA-capable GPU (8B models need ~40GB VRAM, use `--dtype bfloat16`)
-- See `requirements.txt` for Python dependencies
 
-### Setup
+### Setup with uv (recommended)
+
+```bash
+# Install uv if not already installed
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install dependencies
+uv sync
+
+# Install with optional dependencies
+uv sync --extra full
+```
+
+### Alternative: Setup with pip
 
 ```bash
 # Create virtual environment
 python -m venv venv
-source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+source venv/bin/activate
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Optional: Install as editable package
+# Install from pyproject.toml
 pip install -e .
+
+# With optional dependencies
+pip install -e ".[full]"
 ```
 
 ## Project Structure
@@ -81,9 +94,11 @@ pip install -e .
 │   ├── logging/                  # W&B logging utilities
 │   └── deprecated/               # Old versions (preserved for reference)
 │
+├── scripts/                      # Shell scripts for long-running experiments
 ├── results/                      # Experiment outputs (JSON, figures)
 ├── docs/                         # Additional documentation
 ├── wandb/                        # W&B run histories
+├── pyproject.toml                # Project configuration (uv/pip)
 └── CLAUDE.md                     # AI assistant instructions
 ```
 
@@ -141,10 +156,10 @@ For multi-hour experiments, use the shell scripts:
 
 ```bash
 # Run with checkpoints
-bash run_full_multilayer_experiment.sh
+bash scripts/run_full_multilayer_experiment.sh
 
 # Monitor progress
-bash monitor_full_experiment.sh
+bash scripts/monitor_full_experiment.sh
 ```
 
 ## Key Concepts

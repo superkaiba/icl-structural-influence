@@ -15,6 +15,7 @@ Detailed instructions for setting up the In-Context Representation Influence res
 ### Software
 
 - Python 3.10+
+- [uv](https://docs.astral.sh/uv/) (recommended) or pip
 - CUDA 11.8+ (for GPU acceleration)
 - Git
 
@@ -23,39 +24,34 @@ Detailed instructions for setting up the In-Context Representation Influence res
 ### 1. Clone Repository
 
 ```bash
-git clone <repository-url>
-cd in_context_representation_influence
+git clone https://github.com/superkaiba/icl-structural-influence.git
+cd icl-structural-influence
 ```
 
-### 2. Create Virtual Environment
+### 2. Install uv (if not already installed)
 
 ```bash
-# Using venv
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# or
-venv\Scripts\activate  # Windows
-
-# OR using conda
-conda create -n icl-influence python=3.10
-conda activate icl-influence
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 ### 3. Install Dependencies
 
 ```bash
-# Core dependencies
-pip install -r requirements.txt
+# Install all dependencies (creates virtual environment automatically)
+uv sync
 
-# Optional: Install as editable package
-pip install -e .
+# With optional dependencies (wandb, scikit-learn, imageio)
+uv sync --extra full
+
+# With dev dependencies (pytest, black, ruff)
+uv sync --group dev
 ```
 
 ### 4. Verify Installation
 
 ```bash
 # Test core imports
-python -c "
+uv run python -c "
 from src.data import HierarchicalGraph, HierarchicalGraphConfig
 from src.models import HookedLLM
 from src.metrics import ClusterSeparation, ContextSensitivityScore
@@ -63,7 +59,21 @@ print('All imports successful!')
 "
 
 # Test with small model (no GPU required)
-python experiments/core/run_experiment.py --model gpt2 --n-contexts 5 --layers 0,5,11
+uv run python experiments/core/run_experiment.py --model gpt2 --n-contexts 5 --layers 0,5,11
+```
+
+### Alternative: Install with pip
+
+```bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+
+# Install from pyproject.toml
+pip install -e .
+
+# With optional dependencies
+pip install -e ".[full,dev]"
 ```
 
 ## Model Setup
