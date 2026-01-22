@@ -149,11 +149,11 @@ def compute_superposition_score(
     """
     # Convert to numpy if needed
     if isinstance(rep, torch.Tensor):
-        rep = rep.cpu().numpy()
+        rep = rep.float().cpu().numpy()
     if isinstance(H1_centroid, torch.Tensor):
-        H1_centroid = H1_centroid.cpu().numpy()
+        H1_centroid = H1_centroid.float().cpu().numpy()
     if isinstance(H2_centroid, torch.Tensor):
-        H2_centroid = H2_centroid.cpu().numpy()
+        H2_centroid = H2_centroid.float().cpu().numpy()
 
     midpoint = (H1_centroid + H2_centroid) / 2
     return float(np.linalg.norm(rep - midpoint))
@@ -184,11 +184,11 @@ def compute_hypothesis_ratio(
         Ratio of distances
     """
     if isinstance(rep, torch.Tensor):
-        rep = rep.cpu().numpy()
+        rep = rep.float().cpu().numpy()
     if isinstance(H1_centroid, torch.Tensor):
-        H1_centroid = H1_centroid.cpu().numpy()
+        H1_centroid = H1_centroid.float().cpu().numpy()
     if isinstance(H2_centroid, torch.Tensor):
-        H2_centroid = H2_centroid.cpu().numpy()
+        H2_centroid = H2_centroid.float().cpu().numpy()
 
     d1 = np.linalg.norm(rep - H1_centroid)
     d2 = np.linalg.norm(rep - H2_centroid)
@@ -211,9 +211,9 @@ def compute_collapse_magnitude(
         L2 distance between representations
     """
     if isinstance(rep_before, torch.Tensor):
-        rep_before = rep_before.cpu().numpy()
+        rep_before = rep_before.float().cpu().numpy()
     if isinstance(rep_after, torch.Tensor):
-        rep_after = rep_after.cpu().numpy()
+        rep_after = rep_after.float().cpu().numpy()
 
     return float(np.linalg.norm(rep_after - rep_before))
 
@@ -233,7 +233,7 @@ def compute_representation_velocity(
         Array of velocities, shape (seq_len-1,)
     """
     if isinstance(reps, torch.Tensor):
-        reps = reps.cpu().numpy()
+        reps = reps.float().cpu().numpy()
 
     velocities = []
     for i in range(len(reps) - 1):
@@ -264,15 +264,15 @@ def analyze_position_trajectory(
         List of SuperpositionResult for each position
     """
     if isinstance(representations, torch.Tensor):
-        representations = representations.cpu().numpy()
+        representations = representations.float().cpu().numpy()
     if isinstance(H1_labels, torch.Tensor):
         H1_labels = H1_labels.cpu().numpy()
     if isinstance(H2_labels, torch.Tensor):
         H2_labels = H2_labels.cpu().numpy()
     if isinstance(H1_centroid, torch.Tensor):
-        H1_centroid = H1_centroid.cpu().numpy()
+        H1_centroid = H1_centroid.float().cpu().numpy()
     if isinstance(H2_centroid, torch.Tensor):
-        H2_centroid = H2_centroid.cpu().numpy()
+        H2_centroid = H2_centroid.float().cpu().numpy()
 
     seq_len = len(representations)
     results = []
