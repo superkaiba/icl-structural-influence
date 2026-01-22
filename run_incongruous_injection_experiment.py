@@ -526,20 +526,20 @@ def create_visualizations(results: dict, output_dir: Path, model_name: str):
                 if pos_N_data:
                     delta = pos_N_data.get("phi_delta_by_layer", {}).get(mid_layer, {})
                     if delta:
-                        # Use median of absolute values to show effect magnitude
-                        phi_deltas.append(delta.get("median_abs", abs(delta.get("median", 0))))
-                        # Use IQR of absolute values / 2 for error bars
-                        phi_stds.append(delta.get("iqr_abs", delta.get("iqr", 0)) / 2)
+                        # Use mean for effect magnitude
+                        phi_deltas.append(delta.get("mean", 0))
+                        # Use std for error bars (will convert to SE later)
+                        phi_stds.append(delta.get("std", 0))
                         valid_positions.append(pos)
 
             if valid_positions:
                 color = dark_colors[row_idx % len(dark_colors)]
                 phi_deltas = np.array(phi_deltas)
-                phi_iqr_half = np.array(phi_stds)  # Already IQR/2
+                phi_stds_arr = np.array(phi_stds)
                 valid_positions = np.array(valid_positions)
 
-                # Use IQR/2 directly as error (robust measure)
-                phi_ses = phi_iqr_half
+                # Use standard error = std / sqrt(n)
+                phi_ses = phi_stds_arr / np.sqrt(n_samples)
 
                 # Plot line
                 ax.plot(valid_positions, phi_deltas, 'o-',
@@ -557,7 +557,7 @@ def create_visualizations(results: dict, output_dir: Path, model_name: str):
             if row_idx == len(token_types) - 1:
                 ax.set_xlabel('Position', fontsize=10)
             if col_idx == 0:
-                ax.set_ylabel('|Φ Delta|', fontsize=10)
+                ax.set_ylabel('Φ Delta (mean)', fontsize=10)
             if row_idx == 0:
                 ax.set_title(f'N={N}', fontsize=11, fontweight='bold')
 
@@ -567,7 +567,7 @@ def create_visualizations(results: dict, output_dir: Path, model_name: str):
                            xycoords='axes fraction', fontsize=9,
                            ha='left', va='center')
 
-    plt.suptitle(f'Position Effect by Token Type (median |Φ delta| ± IQR/2)\n{model_name}', fontsize=14, fontweight='bold')
+    plt.suptitle(f'Position Effect by Token Type (mean Φ delta ± SE)\n{model_name}', fontsize=14, fontweight='bold')
     plt.tight_layout()
 
     fig_path = output_dir / "position_effect_by_token_type.png"
