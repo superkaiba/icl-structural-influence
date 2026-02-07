@@ -182,6 +182,21 @@ After completing an experiment, save a markdown summary to `experiments/` with t
 - Keep interpretations brief but informative
 - Note any anomalies or unexpected results
 
+## Experiment Log
+
+**IMPORTANT**: Always log experiment runs and results to `experiments/experiment_log.md`.
+
+After running any experiment or generating results:
+1. Add an entry to the experiment log with date, description, and key findings
+2. Include W&B run links in the W&B Runs table
+3. Log meeting notes, research directions, and methodological decisions
+
+The log serves as the canonical record of:
+- Experiment runs and their outcomes
+- Meeting notes and research discussions
+- Methodological decisions and their rationale
+- Open questions and next steps
+
 ## Models Tested
 
 Primary: `meta-llama/Meta-Llama-3-8B` (8B), also tested with `Qwen2.5-7B`, `Mistral-7B`. Quick testing: use `gpt2`.
@@ -189,6 +204,26 @@ Primary: `meta-llama/Meta-Llama-3-8B` (8B), also tested with `Qwen2.5-7B`, `Mist
 ## Hardware Notes
 
 Experiments run on NVIDIA A40 (48GB) GPUs. 8B models require significant VRAM - use `--dtype bfloat16` for efficiency.
+
+## Showing Plots
+
+When the user asks to "show a plot" or "display a graph":
+1. Generate the plot and save to the appropriate `results/` subdirectory
+2. Commit and push the plot to GitHub
+3. Provide the raw GitHub URL for direct viewing: `https://raw.githubusercontent.com/superkaiba/icl-structural-influence/main/results/[path]/[plot].png`
+
+Example workflow:
+```bash
+# Generate plot
+PYTHONPATH=. python experiments/plotting/plot_*.py --results-dir results/[experiment] --output-dir results/[experiment]/plots
+
+# Commit and push
+git add results/[experiment]/plots/*.png
+git commit -m "Add [experiment] plots"
+git push
+```
+
+Then provide link: `https://raw.githubusercontent.com/superkaiba/icl-structural-influence/main/results/[experiment]/plots/[plot].png`
 
 ## Implementation Guidelines
 
