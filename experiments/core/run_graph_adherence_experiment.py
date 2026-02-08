@@ -239,6 +239,12 @@ def plot_results(results_path: str, output_dir: str = None):
     layers = sorted(all_layers)
     checkpoints = sorted(all_checkpoints)
 
+    # Helper function to get disambiguation percentage from condition name
+    def get_disambig_pct(cond):
+        if "fully" in cond:
+            return 100
+        return int(cond.split("_")[1].replace("pct", ""))
+
     # Metrics to plot
     metrics = [
         ("dirichlet_ratio", "Dirichlet Energy Ratio", "H1/(H1+H2) - Higher = more H2-adherent"),
@@ -281,6 +287,12 @@ def plot_results(results_path: str, output_dir: str = None):
             ax.plot(checkpoints, means, label=label, color=colors[cond_idx], linewidth=2)
             ax.fill_between(checkpoints, means - stds, means + stds, alpha=0.2, color=colors[cond_idx])
 
+            # Add vertical line at disambiguation point
+            disambig_pct = get_disambig_pct(condition)
+            if disambig_pct < 100:
+                disambig_pos = disambig_pct * max(checkpoints) / 100
+                ax.axvline(x=disambig_pos, color=colors[cond_idx], linestyle='--', alpha=0.5, linewidth=1)
+
         ax.set_xlabel("Context Position")
         ax.set_ylabel(metric_name)
         ax.set_title(f"{metric_name}\n({metric_desc})")
@@ -295,12 +307,6 @@ def plot_results(results_path: str, output_dir: str = None):
     # Plot 2: Compare metrics at final checkpoint for different disambiguations
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
     axes = axes.flatten()
-
-    # Sort conditions by disambiguation percentage
-    def get_disambig_pct(cond):
-        if "fully" in cond:
-            return 100
-        return int(cond.split("_")[1].replace("pct", ""))
 
     sorted_conditions = sorted(conditions, key=get_disambig_pct)
     disambig_pcts = [get_disambig_pct(c) for c in sorted_conditions]
