@@ -424,6 +424,58 @@ def plot_results(results_path: str, output_dir: str = None):
     plt.savefig(output_path / "metric_comparison_normalized.png", dpi=150, bbox_inches="tight")
     plt.close()
 
+    # Plot 5: Per-layer plots for each metric (separate figure per metric)
+    for metric_key, metric_name, metric_desc in metrics:
+        fig, axes = plt.subplots(2, 3, figsize=(16, 10))
+        axes = axes.flatten()
+
+        for layer_idx, layer in enumerate(layers):
+            if layer_idx >= len(axes):
+                break
+            ax = axes[layer_idx]
+
+            for cond_idx, condition in enumerate(sorted(conditions, key=get_disambig_pct)):
+                means = []
+                stds = []
+
+                for cp in checkpoints:
+                    key = f"layer_{layer}_cp_{cp}"
+                    if key in results[condition]:
+                        trials = results[condition][key]
+                        values = [t[metric_key] for t in trials]
+                        means.append(np.mean(values))
+                        stds.append(np.std(values))
+                    else:
+                        means.append(np.nan)
+                        stds.append(np.nan)
+
+                means = np.array(means)
+                stds = np.array(stds)
+
+                label = condition.replace("_", " ").replace("pct", "%")
+                ax.plot(checkpoints, means, label=label, color=colors[cond_idx], linewidth=2)
+                ax.fill_between(checkpoints, means - stds, means + stds, alpha=0.15, color=colors[cond_idx])
+
+                # Add vertical line at disambiguation point
+                disambig_pct = get_disambig_pct(condition)
+                if disambig_pct < 100:
+                    disambig_pos = disambig_pct * max(checkpoints) / 100
+                    ax.axvline(x=disambig_pos, color=colors[cond_idx], linestyle='--', alpha=0.5, linewidth=1)
+
+            ax.set_xlabel("Context Position")
+            ax.set_ylabel(metric_name)
+            ax.set_title(f"Layer {layer}")
+            ax.grid(True, alpha=0.3)
+
+        # Add legend to last subplot
+        axes[-1].legend(loc='center', fontsize=9)
+        axes[-1].axis('off')
+
+        plt.suptitle(f"{metric_name} by Layer\n({metric_desc})", fontsize=14)
+        plt.tight_layout()
+        plt.savefig(output_path / f"{metric_key}_by_layer.png", dpi=150, bbox_inches="tight")
+        plt.close()
+
     print(f"Plots saved to {output_path}")
 
 
