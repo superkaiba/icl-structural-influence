@@ -1,0 +1,101 @@
+{
+  "config": {
+    "model": "Qwen/Qwen2.5-7B",
+    "max_context": 10000,
+    "checkpoints": [
+      10,
+      20,
+      30,
+      50,
+      75,
+      100,
+      125,
+      150,
+      175,
+      200,
+      250,
+      300,
+      350,
+      400,
+      450,
+      500,
+      600,
+      700,
+      800,
+      900,
+      1000,
+      1250,
+      1500,
+      1750,
+      2000,
+      2500,
+      3000,
+      3500,
+      4000,
+      4500,
+      5000,
+      5500,
+      6000,
+      6500,
+      7000,
+      7500,
+      8000,
+      8500,
+      9000,
+      9500,
+      10000
+    ],
+    "layers": [
+      0,
+      7,
+      14,
+      21,
+      27
+    ],
+    "window_size": 50,
+    "n_trials": 5,
+    "conditions": [
+      "natural_wildchat"
+    ],
+    "seed": 42,
+    "timestamp": "20260209_090517",
+    "dtype": "bfloat16"
+  },
+  "conditions": {
+    "natural_wildchat": {
+      "config": {
+        "type": "natural",
+        "source": "wildchat",
+        "description": "Long user conversations (WildChat, 10+ turns)"
+      },
+      "n_trials_completed": 5,
+      "trials_summary": [
+        {
+          "trial_idx": 0,
+          "n_tokens": 10000,
+          "error": null
+        },
+        {
+          "trial_idx": 1,
+          "n_tokens": 10000,
+          "error": null
+        },
+        {
+          "trial_idx": 2,
+          "n_tokens": 10000,
+          "error": null
+        },
+        {
+          "trial_idx": 3,
+          "n_tokens": 10000,
+          "error": null
+        },
+        {
+          "trial_idx": 4,
+          "n_tokens": 10000,
+          "error": null
+        }
+      ]
+    }
+  }
+}

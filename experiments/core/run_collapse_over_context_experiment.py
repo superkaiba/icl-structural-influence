@@ -67,12 +67,12 @@ from src.metrics.collapse_metrics import (
 )
 
 
-# Default checkpoint schedule: dense early, sparse late (40 checkpoints)
+# Default checkpoint schedule: dense early, sparse late (for 10K context)
 DEFAULT_CHECKPOINTS = [
-    10, 20, 30, 50, 75, 100, 150, 200, 300, 400,
-    500, 600, 750, 1000, 1250, 1500, 2000, 2500, 3000, 4000,
-    5000, 6000, 8000, 10000, 12000, 16000, 20000, 24000, 32000, 40000,
-    48000, 56000, 64000, 80000, 96000, 112000, 128000
+    10, 20, 30, 50, 75, 100, 125, 150, 175, 200,
+    250, 300, 350, 400, 450, 500, 600, 700, 800, 900,
+    1000, 1250, 1500, 1750, 2000, 2500, 3000, 3500, 4000, 4500,
+    5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 9500, 10000
 ]
 
 # Disambiguation percentages: very dense at start
@@ -111,7 +111,12 @@ CONDITION_CONFIGS = {
     "natural_conversation": {
         "type": "natural",
         "source": "conversation",
-        "description": "Multi-turn conversations",
+        "description": "Multi-turn conversations (OpenAssistant)",
+    },
+    "natural_wildchat": {
+        "type": "natural",
+        "source": "wildchat",
+        "description": "Long user conversations (WildChat, 10+ turns)",
     },
     # Vocabulary size variations
     "vocab_15": {
@@ -268,7 +273,7 @@ def generate_natural_tokens(
 
     Args:
         loader: NaturalLanguageLoader instance
-        source: "wikipedia", "book", or "conversation"
+        source: "wikipedia", "book", "conversation", or "wildchat"
         target_length: Target number of tokens
 
     Returns:
@@ -280,6 +285,8 @@ def generate_natural_tokens(
         tokens = loader.load_book(target_length)
     elif source == "conversation":
         tokens = loader.load_conversation(target_length)
+    elif source == "wildchat":
+        tokens = loader.load_wildchat_conversation(target_length, min_turns=10)
     else:
         raise ValueError(f"Unknown source: {source}")
 

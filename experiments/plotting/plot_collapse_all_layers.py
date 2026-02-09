@@ -194,7 +194,8 @@ def plot_all_layers_data_type(results: dict, metric: str, metric_name: str, outp
         "structured_no_ambig": ("Structured (No Ambig)", "green"),
         "structured_full_ambig": ("Structured (Full Ambig)", "red"),
         "natural_books": ("Natural: Books", "purple"),
-        "natural_conversation": ("Natural: Conversation", "orange"),
+        "natural_conversation": ("Natural: Conversation (OpenAssistant)", "orange"),
+        "natural_wildchat": ("Natural: Long Conversations (WildChat)", "magenta"),
     }
 
     n_layers = len(layers)
