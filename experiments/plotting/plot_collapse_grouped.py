@@ -80,7 +80,7 @@ def aggregate_by_checkpoint(trials: list, metric: str, layer: int) -> tuple:
 
 
 def plot_disambiguation_comparison(results: dict, metric: str, metric_name: str, output_path: Path, layer: int = 27):
-    """Plot disambiguation conditions comparison."""
+    """Plot disambiguation conditions comparison with ambiguity baselines."""
 
     # Get all disambiguation conditions
     disambig_conditions = []
@@ -94,6 +94,21 @@ def plot_disambiguation_comparison(results: dict, metric: str, metric_name: str,
 
     fig, ax = plt.subplots(figsize=(12, 7))
 
+    # Plot no ambiguity baseline (green, thick)
+    if "structured_no_ambig" in results:
+        cps, means, stds = aggregate_by_checkpoint(results["structured_no_ambig"], metric, layer)
+        if len(cps) > 0:
+            ax.plot(cps, means, label="No Ambiguity", color="green", linewidth=3, zorder=10)
+            ax.fill_between(cps, means - stds, means + stds, alpha=0.2, color="green")
+
+    # Plot full ambiguity baseline (red, thick)
+    if "structured_full_ambig" in results:
+        cps, means, stds = aggregate_by_checkpoint(results["structured_full_ambig"], metric, layer)
+        if len(cps) > 0:
+            ax.plot(cps, means, label="Full Ambiguity", color="red", linewidth=3, zorder=10)
+            ax.fill_between(cps, means - stds, means + stds, alpha=0.2, color="red")
+
+    # Plot disambiguation conditions (viridis gradient)
     colors = plt.cm.viridis(np.linspace(0, 1, len(disambig_conditions)))
 
     for idx, (pct, condition) in enumerate(disambig_conditions):
@@ -101,7 +116,7 @@ def plot_disambiguation_comparison(results: dict, metric: str, metric_name: str,
         if len(cps) == 0:
             continue
 
-        label = f"{pct}%"
+        label = f"Disambig {pct}%"
         ax.plot(cps, means, label=label, color=colors[idx], linewidth=1.5)
         ax.fill_between(cps, means - stds, means + stds, alpha=0.1, color=colors[idx])
 
@@ -112,10 +127,10 @@ def plot_disambiguation_comparison(results: dict, metric: str, metric_name: str,
 
     ax.set_xlabel("Context Length (tokens)", fontsize=12)
     ax.set_ylabel(metric_name, fontsize=12)
-    ax.set_title(f"{metric_name} by Disambiguation Point (Layer {layer})", fontsize=14)
+    ax.set_title(f"{metric_name}: All Structured Conditions (Layer {layer})", fontsize=14)
     ax.set_xscale("log")
     ax.grid(True, alpha=0.3)
-    ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=8, title="Disambig @")
+    ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=8, title="Condition")
 
     plt.tight_layout()
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
