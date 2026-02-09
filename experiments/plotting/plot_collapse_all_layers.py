@@ -75,8 +75,8 @@ def aggregate_by_checkpoint(trials: list, metric: str, layer: int) -> tuple:
     return checkpoints, np.array(means), np.array(stds)
 
 
-def plot_all_layers_disambiguation(results: dict, metric: str, metric_name: str, output_path: Path, layers: list):
-    """Plot disambiguation conditions with all layers as subplots."""
+def plot_all_layers_structured(results: dict, metric: str, metric_name: str, output_path: Path, layers: list):
+    """Plot all structured conditions (no ambig, full ambig, disambiguation) with all layers as subplots."""
 
     # Get all disambiguation conditions
     disambig_conditions = []
@@ -90,24 +90,42 @@ def plot_all_layers_disambiguation(results: dict, metric: str, metric_name: str,
     n_layers = len(layers)
     fig, axes = plt.subplots(1, n_layers, figsize=(4 * n_layers, 5), sharey=True)
 
-    colors = plt.cm.viridis(np.linspace(0, 1, len(disambig_conditions)))
+    # Colors for disambiguation conditions (viridis gradient)
+    disambig_colors = plt.cm.viridis(np.linspace(0.1, 0.9, len(disambig_conditions)))
 
     for layer_idx, layer in enumerate(layers):
         ax = axes[layer_idx]
 
+        # Plot no ambiguity (green, thick)
+        if "structured_no_ambig" in results:
+            cps, means, stds = aggregate_by_checkpoint(results["structured_no_ambig"], metric, layer)
+            if len(cps) > 0:
+                label = "No Ambig" if layer_idx == n_layers - 1 else None
+                ax.plot(cps, means, color="green", linewidth=3, label=label)
+                ax.fill_between(cps, means - stds, means + stds, alpha=0.2, color="green")
+
+        # Plot full ambiguity (red, thick)
+        if "structured_full_ambig" in results:
+            cps, means, stds = aggregate_by_checkpoint(results["structured_full_ambig"], metric, layer)
+            if len(cps) > 0:
+                label = "Full Ambig" if layer_idx == n_layers - 1 else None
+                ax.plot(cps, means, color="red", linewidth=3, label=label)
+                ax.fill_between(cps, means - stds, means + stds, alpha=0.2, color="red")
+
+        # Plot disambiguation conditions
         for idx, (pct, condition) in enumerate(disambig_conditions):
             cps, means, stds = aggregate_by_checkpoint(results[condition], metric, layer)
             if len(cps) == 0:
                 continue
 
-            label = f"{pct}%" if layer_idx == n_layers - 1 else None
-            ax.plot(cps, means, color=colors[idx], linewidth=1.2, label=label)
-            ax.fill_between(cps, means - stds, means + stds, alpha=0.1, color=colors[idx])
+            label = f"Disambig {pct}%" if layer_idx == n_layers - 1 else None
+            ax.plot(cps, means, color=disambig_colors[idx], linewidth=1.2, label=label)
+            ax.fill_between(cps, means - stds, means + stds, alpha=0.08, color=disambig_colors[idx])
 
             # Vertical line at disambiguation point
             disambig_pos = int(10000 * pct / 100)
             if 0 < disambig_pos < max(cps):
-                ax.axvline(x=disambig_pos, color=colors[idx], linestyle='--', alpha=0.3, linewidth=0.8)
+                ax.axvline(x=disambig_pos, color=disambig_colors[idx], linestyle='--', alpha=0.3, linewidth=0.8)
 
         ax.set_xlabel("Context Length")
         ax.set_title(f"Layer {layer}")
@@ -115,54 +133,15 @@ def plot_all_layers_disambiguation(results: dict, metric: str, metric_name: str,
         ax.grid(True, alpha=0.3)
 
     axes[0].set_ylabel(metric_name)
-    axes[-1].legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=7, title="Disambig @")
+    axes[-1].legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=6, title="Condition")
 
-    plt.suptitle(f"{metric_name} by Disambiguation Point", fontsize=14)
+    plt.suptitle(f"{metric_name}: All Structured Conditions", fontsize=14)
     plt.tight_layout()
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close()
     print(f"Saved: {output_path}")
 
 
-def plot_all_layers_ambiguity(results: dict, metric: str, metric_name: str, output_path: Path, layers: list):
-    """Plot no ambiguity vs full ambiguity with all layers as subplots."""
-
-    conditions = {
-        "structured_no_ambig": ("No Ambiguity", "green"),
-        "structured_full_ambig": ("Full Ambiguity", "red"),
-    }
-
-    n_layers = len(layers)
-    fig, axes = plt.subplots(1, n_layers, figsize=(4 * n_layers, 5), sharey=True)
-
-    for layer_idx, layer in enumerate(layers):
-        ax = axes[layer_idx]
-
-        for condition, (label, color) in conditions.items():
-            if condition not in results:
-                continue
-
-            cps, means, stds = aggregate_by_checkpoint(results[condition], metric, layer)
-            if len(cps) == 0:
-                continue
-
-            lbl = label if layer_idx == n_layers - 1 else None
-            ax.plot(cps, means, label=lbl, color=color, linewidth=2.5)
-            ax.fill_between(cps, means - stds, means + stds, alpha=0.2, color=color)
-
-        ax.set_xlabel("Context Length")
-        ax.set_title(f"Layer {layer}")
-        ax.set_xscale("log")
-        ax.grid(True, alpha=0.3)
-
-    axes[0].set_ylabel(metric_name)
-    axes[-1].legend(loc='best', fontsize=10)
-
-    plt.suptitle(f"{metric_name}: No Ambiguity vs Full Ambiguity", fontsize=14)
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=150, bbox_inches="tight")
-    plt.close()
-    print(f"Saved: {output_path}")
 
 
 def plot_all_layers_vocab_size(results: dict, metric: str, metric_name: str, output_path: Path, layers: list):
@@ -280,15 +259,9 @@ if __name__ == "__main__":
     for metric_key, metric_name in metrics:
         print(f"\n=== {metric_name} ===")
 
-        plot_all_layers_disambiguation(
+        plot_all_layers_structured(
             results, metric_key, metric_name,
-            output_dir / f"{metric_key}_all_layers_disambiguation.png",
-            layers
-        )
-
-        plot_all_layers_ambiguity(
-            results, metric_key, metric_name,
-            output_dir / f"{metric_key}_all_layers_ambiguity.png",
+            output_dir / f"{metric_key}_all_layers_structured.png",
             layers
         )
 
