@@ -417,6 +417,68 @@ The proper dual-interpretation setup validates the original hypothesis: models e
 
 ---
 
+## 2026-02-09: Collapse Reversal Experiment
+
+### Objective
+Test whether representational collapse can be reversed by injecting contradicting information after a non-ambiguous sequence has caused collapse.
+
+### Setup
+- Model: Qwen/Qwen2.5-7B
+- Phase 1: 5000 tokens (H1-only walk to induce collapse)
+- Phase 2: 5000 tokens (injection of contradicting information)
+- Total: 10,000 tokens per trial
+- Layers: 0, 7, 14, 21, 27
+- N trials: 5 per condition
+- Window size: 50
+
+### Conditions Tested
+1. **Control (H1 continuous)**: No injection, continue H1 walk
+2. **H2 Injection (same tokens)**: Switch to H2-only walk using same vocabulary
+3. **Different Graph**: Switch to H1 walk on completely different graph/vocabulary
+4. **Natural Books**: Switch to natural language from Project Gutenberg
+5. **Natural Wikipedia**: Switch to natural language from Wikipedia
+
+### Key Results
+
+**COLLAPSE IS PARTIALLY REVERSIBLE**
+
+| Injection Type | Reversal Strength | Cos Sim Change (L14) | Mechanism |
+|----------------|-------------------|----------------------|-----------|
+| Natural Books | **Strong** | -0.30 (0.65→0.35) | Complete token distribution shift |
+| Natural Wikipedia | Moderate | -0.15 | Token distribution shift |
+| Different Graph | Moderate | -0.05 | New tokens with new statistics |
+| H2 Same Tokens | **Weak** | -0.01 | Same tokens, structure change ignored |
+| Control | None | 0.00 | Continued collapse |
+
+### Major Findings
+
+1. **Natural language causes strongest reversal**: Books and Wikipedia injection produce dramatic drops in cosine similarity, indicating sustained representational diversity.
+
+2. **Token identity > latent structure**: H2 injection (same tokens, different structure) has minimal effect, suggesting collapse is primarily driven by token-level patterns, not structural relationships.
+
+3. **Layer-dependent effects**:
+   - Layers 0, 7, 14: Natural language and different graph increase effective dimension
+   - Layer 27: Inverted effect - natural language *decreases* effective dimension
+
+4. **Immediate vs sustained effects**: Different graph shows immediate spike at injection but settles back; natural language maintains lower cosine similarity throughout Phase 2.
+
+### Plots
+- `results/collapse_reversal/plots/trajectory_avg_cos_sim.png`
+- `results/collapse_reversal/plots/trajectory_effective_dim.png`
+- `results/collapse_reversal/plots/delta_avg_cos_sim.png`
+- `results/collapse_reversal/plots/delta_effective_dim.png`
+- `results/collapse_reversal/plots/before_after_comparison.png`
+
+### Summary Document
+See `experiments/2026-02-09_collapse-reversal.md` for full analysis.
+
+### Follow-up Questions
+1. Does reversal persist if we return to H1 after injection? (Phase 3 experiment)
+2. What is minimum natural language injection needed to cause reversal?
+3. Can targeted token injection cause reversal without full natural language?
+
+---
+
 ## 2026-02-09: Collapse Over Context - WildChat Long Conversations
 
 ### Objective

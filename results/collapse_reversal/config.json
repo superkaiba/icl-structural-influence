@@ -1,0 +1,50 @@
+{
+  "model": "Qwen/Qwen2.5-7B",
+  "phase1_length": 5000,
+  "phase2_length": 5000,
+  "injection_point": 5000,
+  "total_length": 10000,
+  "checkpoints": [
+    100,
+    500,
+    1000,
+    2000,
+    3000,
+    4000,
+    4500,
+    4750,
+    4900,
+    4950,
+    4990,
+    5000,
+    5010,
+    5050,
+    5100,
+    5250,
+    5500,
+    6000,
+    7000,
+    8000,
+    9000,
+    10000
+  ],
+  "layers": [
+    0,
+    7,
+    14,
+    21,
+    27
+  ],
+  "window_size": 50,
+  "n_trials": 5,
+  "conditions": [
+    "control_h1_continuous",
+    "inject_h2_same_tokens",
+    "inject_different_graph",
+    "inject_natural_books",
+    "inject_natural_wikipedia"
+  ],
+  "seed": 42,
+  "timestamp": "20260209_224836",
+  "dtype": "bfloat16"
+}

@@ -235,6 +235,128 @@ class DualInterpretationGraph:
             # Valid in H2 but NOT in H1
             return list(h2_neighbors - h1_neighbors)
 
+    def generate_h1_only_walk(
+        self,
+        length: int,
+        return_nodes: bool = False,
+    ) -> str | tuple[str, list[int], dict]:
+        """
+        Generate a walk that follows ONLY H1-valid transitions (no ambiguity).
+
+        This creates sequences that are unambiguously consistent with H1 from
+        the start, serving as a baseline for collapse experiments where there's
+        no competing hypothesis.
+
+        Args:
+            length: Total walk length
+            return_nodes: If True, also return node indices and metadata
+
+        Returns:
+            If return_nodes=False: Prompt string
+            If return_nodes=True: (prompt, nodes, metadata)
+        """
+        # Start from a random node
+        current = self.rng.integers(0, self.num_tokens)
+        walk_nodes = [current]
+
+        for pos in range(1, length):
+            # Only use H1 neighbors
+            h1_neighbors = self.get_neighbors(current, "H1")
+
+            if h1_neighbors:
+                current = self.rng.choice(h1_neighbors)
+            else:
+                # No H1 neighbors - pick a random node in the same H1 cluster
+                current_cluster = self.H1_clusters[current]
+                same_cluster_nodes = [
+                    n for n in range(self.num_tokens)
+                    if self.H1_clusters[n] == current_cluster and n != current
+                ]
+                if same_cluster_nodes:
+                    current = self.rng.choice(same_cluster_nodes)
+                else:
+                    # Fall back to any node (rare edge case)
+                    current = self.rng.integers(0, self.num_tokens)
+
+            walk_nodes.append(current)
+
+        # Convert to tokens
+        walk_tokens = [self.idx_to_token[n] for n in walk_nodes]
+        prompt = " ".join(walk_tokens)
+
+        if return_nodes:
+            metadata = {
+                "true_hypothesis": "H1",
+                "disambig_position": 0,  # Disambiguated from start
+                "disambig_achieved": True,
+                "H1_clusters": [self.H1_clusters[n] for n in walk_nodes],
+                "H2_clusters": [self.H2_clusters[n] for n in walk_nodes],
+                "walk_type": "h1_only",
+            }
+            return prompt, walk_nodes, metadata
+        return prompt
+
+    def generate_h2_only_walk(
+        self,
+        length: int,
+        return_nodes: bool = False,
+    ) -> str | tuple[str, list[int], dict]:
+        """
+        Generate a walk that follows ONLY H2-valid transitions (no ambiguity).
+
+        This creates sequences that are unambiguously consistent with H2 from
+        the start. Used in collapse reversal experiments to inject contradicting
+        structure after H1-only context has induced collapse.
+
+        Args:
+            length: Total walk length
+            return_nodes: If True, also return node indices and metadata
+
+        Returns:
+            If return_nodes=False: Prompt string
+            If return_nodes=True: (prompt, nodes, metadata)
+        """
+        # Start from a random node
+        current = self.rng.integers(0, self.num_tokens)
+        walk_nodes = [current]
+
+        for pos in range(1, length):
+            # Only use H2 neighbors
+            h2_neighbors = self.get_neighbors(current, "H2")
+
+            if h2_neighbors:
+                current = self.rng.choice(h2_neighbors)
+            else:
+                # No H2 neighbors - pick a random node in the same H2 cluster
+                current_cluster = self.H2_clusters[current]
+                same_cluster_nodes = [
+                    n for n in range(self.num_tokens)
+                    if self.H2_clusters[n] == current_cluster and n != current
+                ]
+                if same_cluster_nodes:
+                    current = self.rng.choice(same_cluster_nodes)
+                else:
+                    # Fall back to any node (rare edge case)
+                    current = self.rng.integers(0, self.num_tokens)
+
+            walk_nodes.append(current)
+
+        # Convert to tokens
+        walk_tokens = [self.idx_to_token[n] for n in walk_nodes]
+        prompt = " ".join(walk_tokens)
+
+        if return_nodes:
+            metadata = {
+                "true_hypothesis": "H2",
+                "disambig_position": 0,  # Disambiguated from start
+                "disambig_achieved": True,
+                "H1_clusters": [self.H1_clusters[n] for n in walk_nodes],
+                "H2_clusters": [self.H2_clusters[n] for n in walk_nodes],
+                "walk_type": "h2_only",
+            }
+            return prompt, walk_nodes, metadata
+        return prompt
+
     def generate_ambiguous_walk(
         self,
         length: int,
@@ -465,6 +587,97 @@ class DualInterpretationGraph:
             plt.savefig(save_path, dpi=150, bbox_inches='tight')
 
         return fig
+
+
+def generate_extended_vocabulary(size: int, seed: Optional[int] = None) -> list[str]:
+    """
+    Generate an extended vocabulary for large vocab experiments.
+
+    Creates unique tokens by combining base words with numeric suffixes
+    when the vocabulary size exceeds the default vocabulary.
+
+    Args:
+        size: Desired vocabulary size
+        seed: Random seed for reproducibility
+
+    Returns:
+        List of unique token strings
+    """
+    rng = np.random.default_rng(seed)
+
+    # Start with default vocabulary
+    vocab = DEFAULT_VOCABULARY.copy()
+
+    # If we need more tokens, generate them
+    if size > len(vocab):
+        # Use additional base words
+        additional_bases = [
+            "oak", "pine", "elm", "birch", "maple",
+            "lion", "tiger", "bear", "wolf", "fox",
+            "red", "blue", "green", "gold", "white",
+            "north", "south", "east", "west", "center",
+            "alpha", "beta", "gamma", "delta", "sigma",
+            "spark", "flame", "frost", "mist", "storm",
+            "swift", "bold", "calm", "keen", "true",
+            "dawn", "dusk", "noon", "night", "day",
+        ]
+        vocab.extend(additional_bases)
+
+        # Add numbered variants if still need more
+        base_count = len(vocab)
+        suffix_num = 1
+        while len(vocab) < size:
+            for base in vocab[:base_count]:
+                if len(vocab) >= size:
+                    break
+                vocab.append(f"{base}{suffix_num}")
+            suffix_num += 1
+
+    # Shuffle and return requested size
+    rng.shuffle(vocab)
+    return vocab[:size]
+
+
+def create_graph_with_vocab_size(
+    vocab_size: int,
+    seed: Optional[int] = None,
+    p_intra_cluster: float = 0.8,
+    p_inter_cluster: float = 0.15,
+) -> "DualInterpretationGraph":
+    """
+    Create a DualInterpretationGraph with a specific vocabulary size.
+
+    This is a convenience function for collapse experiments that vary
+    vocabulary size to study how token diversity affects collapse.
+
+    Args:
+        vocab_size: Number of unique tokens (must be divisible by 3)
+        seed: Random seed for reproducibility
+        p_intra_cluster: Intra-cluster edge probability
+        p_inter_cluster: Inter-cluster edge probability
+
+    Returns:
+        DualInterpretationGraph with the specified vocabulary size
+    """
+    # Ensure vocab_size is divisible by clusters
+    clusters = 3  # Default number of clusters
+    if vocab_size % clusters != 0:
+        # Round up to next multiple
+        vocab_size = ((vocab_size // clusters) + 1) * clusters
+
+    # Generate extended vocabulary if needed
+    vocab = generate_extended_vocabulary(vocab_size, seed)
+
+    config = DualInterpretationConfig(
+        vocab_size=vocab_size,
+        clusters_per_interpretation=clusters,
+        p_intra_cluster=p_intra_cluster,
+        p_inter_cluster=p_inter_cluster,
+        vocabulary=vocab,
+        seed=seed,
+    )
+
+    return DualInterpretationGraph(config)
 
 
 def demo():
