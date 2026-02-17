@@ -532,3 +532,383 @@ All-layers comparison:
 - Raw trials: `results/collapse_10k_experiment/raw/natural_wildchat_trial_*.json`
 
 ---
+
+## 2026-02-12: New Research Tasks
+
+### Task 1: LLM Failure Mode Collapse Experiments
+
+Test representation collapse during known LLM failure modes:
+
+1. **Reasoning loops** - Problems where models get stuck in circular reasoning
+2. **Seahorse emoji** (🦈/🐴) - Known tokenization/generation failure
+3. **Other failure modes** - Literature review needed: repetition collapse, degenerate outputs, hallucination spirals
+
+**Goal**: Do representations collapse before/during these failures? Can we detect failure onset from representation geometry?
+
+### Task 2: Longer Conversations
+
+Extend context length experiments beyond current 10K tokens:
+- Push to 32K+ tokens where models start degrading
+- Track all 5 collapse metrics over very long contexts
+- Compare degradation patterns across models with different context windows
+
+### Task 3: Attractor Dynamics
+
+Investigate whether representational collapse reflects attractor dynamics:
+
+1. **Natural setting attractors** - Are there representation states where the model gets "trapped"?
+2. **Perturbation recovery** - After the model enters an attractor state, how does perturbation (e.g., injection of different content) help escape?
+3. **Basin of attraction** - How large is the perturbation needed to escape? Does this vary by layer?
+4. **Connection to collapse reversal** - Extends the Feb 9 reversal experiment with dynamical systems framing
+
+### Task 4: Representation Changes After Long Context
+
+**Core question**: How do final representations change as context grows?
+
+**Representations to track**:
+- Final token representation
+- Mean representation across all tokens
+
+**Context types** (long context conditions):
+- WildChat (natural long conversations)
+- Many-shot jailbreak sequences
+- Persona drift conversations
+- One repeated token (degenerate baseline)
+
+**Probes to apply after context**:
+- Knowledge questions (factual recall)
+- Reasoning questions (multi-step inference)
+
+**Key research question**: Does the model use context or its weights to retrieve knowledge, and how does this vary with context length?
+- At short context: model likely uses weights (parametric knowledge)
+- At long context: does it shift to using context? Or does context corrupt weight-based retrieval?
+- Measure by comparing accuracy on knowledge/reasoning questions with and without relevant context
+
+### Task 5: SpiralBench
+
+Try SpiralBench dataset for evaluating LLM failure modes related to reasoning spirals and loops. Investigate whether representation collapse correlates with spiral/loop onset in this benchmark.
+
+---
+
+## 2026-02-12: Reasoning Loop Collapse Experiment
+
+### Experiment: Representation Collapse During Reasoning Tasks
+
+**Model**: Qwen/Qwen2.5-7B-Instruct
+**Script**: `experiments/core/run_reasoning_loop_collapse_experiment.py`
+**Results**: `results/reasoning_loop_collapse/`
+
+### Objective
+Test whether representations collapse during reasoning tasks that are known to induce circular reasoning loops in LLMs (based on LoopBench categories).
+
+### Configuration
+- 15 prompts across 5 categories: arithmetic (4), recursive (3), logic (3), enumeration (2), control (3)
+- Layers: [0, 7, 14, 21, 27]
+- Window size: 30, checkpoint every 5 positions
+- Greedy decoding (do_sample=False)
+
+### Key Finding: Qwen2.5-7B-Instruct Did NOT Loop
+
+None of the 15 prompts induced actual loops. The model handles all reasoning tasks cleanly, including:
+- Tower of Hanoi (7 disks, 1959 tokens)
+- Long division (1024 tokens)
+- Fibonacci sequence (1500 tokens)
+- Liar paradox
+
+### Collapse Patterns (No Loops, but Informative)
+
+| Category | Avg CosSim (L27) | Avg EffDim (L27) |
+|----------|-------------------|-------------------|
+| Arithmetic | 0.535 | 14.3 |
+| Enumeration | 0.418 | 13.9 |
+| Recursive | 0.373 | 12.3 |
+| Logic | 0.382 | 11.8 |
+| Control | 0.304 | 16.1 |
+
+**Key observations:**
+1. **Arithmetic tasks show highest collapse** (cos_sim 0.46-0.66) - repetitive numerical patterns
+2. **sqrt_manual shows most collapse** (cos_sim=0.664) - iterative calculation is highly structured
+3. **Controls show lowest collapse** (cos_sim=0.20-0.38) - diverse content prevents convergence
+4. **Truth-teller puzzle has lowest eff_dim** (8.4) - reasoning concentrates on few dimensions
+5. **No loops = no collapse** in the dramatic sense seen with seahorse emoji (cos_sim=0.99)
+
+### Performance Fix: Gram Matrix Trick
+
+Fixed critical performance bug in `src/metrics/collapse_metrics.py`:
+- `np.cov(reps.T)` created 3584×3584 covariance matrix for eigendecomposition
+- `np.linalg.eigvalsh` on this matrix: O(3584³) = ~46 billion ops per call
+- With 1000 checkpoints per experiment: caused hours of CPU compute at 3500% utilization
+- **Fix**: When n_samples < n_dims, use Gram matrix (30×30) instead. Same eigenvalues, O(30³) = trivial
+- Also vectorized L2 distance computation using scipy pdist
+
+### Next Steps
+- Need to find models that actually DO loop (smaller models, base models without instruct tuning)
+- Or use longer generation (5000+ tokens) to exhaust the model
+- Or try adversarial prompts (OverThink-style decoy injection)
+
+### Follow-up: Qwen2.5-7B Base Model (Same Prompts)
+
+**Model**: Qwen/Qwen2.5-7B (base, no instruct tuning)
+**Results**: `results/reasoning_loop_collapse_qwen25_base/`
+
+Tested same 15 prompts on base model to compare with instruct version.
+
+**Result: Base model also did NOT loop**, but showed different collapse patterns:
+
+| Prompt | Category | Tokens | CosSim (L27) | EffDim (L27) |
+|--------|----------|--------|--------------|--------------|
+| permutations | enumeration | 2000 | **0.669** | **4.4** |
+| self_reference_loop | logic | 173 | 0.609 | 12.2 |
+| long_division_hard | arithmetic | 476 | 0.587 | 11.1 |
+| control_simple_math | control | 133 | 0.567 | 8.1 |
+| hanoi_large | recursive | 344 | 0.536 | 15.2 |
+| hanoi_explain | recursive | 620 | 0.532 | 9.9 |
+| counting_backwards | recursive | 71 | 0.522 | 12.0 |
+| newton_iteration | arithmetic | 238 | 0.513 | 10.0 |
+| sqrt_manual | arithmetic | 296 | 0.511 | 14.4 |
+| list_primes | enumeration | 305 | 0.503 | 11.2 |
+| fibonacci_manual | arithmetic | 288 | 0.473 | 16.6 |
+| liar_paradox | logic | 134 | 0.415 | 14.6 |
+| control_explanation | control | 98 | 0.362 | 16.7 |
+| truth_teller_puzzle | logic | 1024 | 0.348 | 9.9 |
+| control_short_story | control | 499 | 0.315 | 17.4 |
+
+**Instruct vs Base Comparison:**
+- Base model has **higher baseline collapse** even in controls (base: 0.315-0.567 vs instruct: 0.200-0.380)
+- Base model generates shorter outputs overall (no instruct training to sustain reasoning)
+- `permutations` is standout: 2000 tokens listing all 720 permutations, achieves near-seahorse-level collapse (cos_sim=0.669, eff_dim=4.4)
+- No Llama models were available (no HF token for gated models)
+
+---
+
+## 2026-02-13: Repetition Collapse Experiment
+
+### Experiment: Representation Collapse Across Repetition Types
+
+**Model**: Qwen/Qwen2.5-7B-Instruct
+**Script**: `experiments/core/run_repetition_collapse_experiment.py`
+**Results**: `results/repetition_collapse_qwen25_instruct/`
+
+### Objective
+Systematically test how different types of repetition affect representational collapse, informed by:
+- Repeat Curse (ACL 2025, arXiv:2504.14218) - SAE features causing repetition
+- Induction Head Toxicity (arXiv:2505.13514) - ICL mechanism driving repetition
+- "Repetitions Are Not All Alike" (arXiv:2504.01100) - natural vs ICL-induced mechanisms
+
+### Configuration
+- 20 prompts across 6 categories
+- Layers: [0, 7, 14, 21, 27]
+- Window size: 30, checkpoint every 5 positions
+- Greedy decoding (do_sample=False)
+- Also computes 1-gram/2-gram repetition scores and token entropy (from Repeat Curse)
+
+### Key Findings
+
+**Category averages (Layer 27):**
+
+| Category | Avg CosSim | Avg EffDim | Loop Rate |
+|----------|-----------|-----------|-----------|
+| token_repetition | **0.440** | **6.3** | 4/5 |
+| forced_copy | 0.408 | 10.1 | 2/2 |
+| natural_greedy | 0.330 | 13.7 | 0/3 |
+| control | 0.338 | 14.0 | 0/3 |
+| enumeration | 0.325 | 11.5 | 0/4 |
+| paragraph_repetition | 0.301 | 14.9 | 0/3 |
+
+**Prompt-level highlights:**
+
+| Prompt | Category | Tokens | Loop | CosSim | EffDim | RepScore |
+|--------|----------|--------|------|--------|--------|----------|
+| repeat_number_sequence | token_rep | 512 | YES | **0.693** | **2.9** | 1.000 |
+| repeat_word_50 | token_rep | 512 | YES | **0.672** | **1.0** | 1.000 |
+| copy_counting | forced_copy | 1024 | YES | 0.452 | 10.1 | 1.000 |
+| enumerate_animals | enumeration | 1326 | no | 0.421 | 12.4 | 0.998 |
+| enumerate_colors | enumeration | 1335 | no | 0.399 | 13.9 | 0.999 |
+| control_diverse_questions | control | 131 | no | 0.314 | 16.7 | 0.729 |
+
+### Key Observations
+
+1. **Token repetition causes strongest collapse**: repeat_word_50 reaches cos_sim=0.672 and eff_dim=1.0 (single-dimensional collapse!). repeat_number_sequence reaches cos_sim=0.693, eff_dim=2.9.
+
+2. **Instruct model resists some repetition**: repeat_word_200 refused to actually repeat 200 times, instead summarizing ("I will repeat... Here is the beginning and end..."). Only generated 38 tokens. This safety behavior prevents collapse.
+
+3. **Paragraph repetition does NOT cause collapse**: Despite feeding 3x repeated paragraphs, the model generates diverse continuations. Average eff_dim=14.9 (highest of all categories!). The model effectively "reads through" repetitive context.
+
+4. **Forced copy with structure loops**: copy_counting (1-20 repeated 10 times) loops at statement level but collapse is moderate (cos_sim=0.452) because the counting creates structural diversity within each cycle.
+
+5. **Enumeration has high rep_score but low collapse**: enumerate_animals has rep_score=0.998 but cos_sim=0.421 and eff_dim=12.4. The shared structure ("1. X\n2. Y\n...") creates token-level repetition but semantic diversity prevents geometric collapse.
+
+6. **Natural greedy generation does NOT spontaneously loop**: All 3 natural prompts (recipe, essay, instructions) generated 950-1600 tokens without looping. Instruct models are well-trained against degenerate generation.
+
+### Comparison with Previous Experiments
+
+| Condition | CosSim Range | EffDim Range | Source |
+|-----------|-------------|-------------|--------|
+| Seahorse emoji loops | 0.54-0.99 | 1.0-3.0 | seahorse experiment |
+| Token repetition loops | 0.35-0.69 | 1.0-6.7 | **this experiment** |
+| Structured arithmetic | 0.46-0.66 | 11-16 | reasoning experiment |
+| Enumeration (no loop) | 0.15-0.42 | 5.9-13.9 | **this experiment** |
+| Controls | 0.31-0.38 | 11.9-16.7 | **this experiment** |
+
+### Collapse Hierarchy (from most to least):
+1. **Degenerate emoji loops** (seahorse): cos_sim > 0.9, eff_dim ~ 1 [catastrophic]
+2. **Token repetition loops**: cos_sim 0.35-0.69, eff_dim 1-7 [severe]
+3. **Structured arithmetic**: cos_sim 0.46-0.66, eff_dim 11-16 [moderate]
+4. **Forced copy loops**: cos_sim ~0.45, eff_dim ~10 [moderate]
+5. **Enumeration**: cos_sim 0.15-0.42, eff_dim 6-14 [mild]
+6. **Natural generation/controls**: cos_sim 0.30-0.38, eff_dim 12-17 [baseline]
+7. **Paragraph repetition context**: cos_sim 0.20-0.40, eff_dim 15 [no effect]
+
+---
+
+## 2026-02-13: Attractor Dynamics Analysis
+
+### Experiment: Characterizing Representational Attractors
+
+**Script**: `experiments/core/run_attractor_dynamics_experiment.py`
+**Results**: `results/attractor_dynamics/`
+**Data Sources**: Collapse reversal (Feb 9-10), seahorse emoji, reasoning loops, repetition collapse
+
+### Objective
+Frame representational collapse as attractor dynamics in a dynamical systems sense. Synthesize all collapse experiments to identify: attractor types, basin sizes, escape conditions, and layer-wise formation.
+
+### Key Findings
+
+#### 1. Three Attractor Types Identified
+
+| Attractor Type | eff_dim | Examples | Count |
+|---------------|---------|----------|-------|
+| **Point** (< 2) | ~1.0 | Emoji loops, repeat_word_50 | 4/57 |
+| **Line** (2-5) | ~3 | repeat_number, permutations | 3/57 |
+| **Manifold** (> 5) | 8-17 | Most generation, controls | 50/57 |
+
+Point attractors are rare but extreme — only occur during true degenerate loops.
+
+#### 2. Attractor Escape Conditions (from reversal experiment)
+
+| Perturbation | Immediate Delta | Final State | Escaped? |
+|-------------|----------------|-------------|----------|
+| Control (no injection) | -0.002 | 0.954 | N/A |
+| H2 same vocabulary | -0.006 | 0.966 | **NO** |
+| Different graph vocabulary | -0.051 | 0.952 | **NO** |
+| Natural books | **-0.169** | **0.402** | **YES** |
+| Natural Wikipedia | **-0.098** | **0.488** | **YES** |
+
+**Critical finding**: Basin of attraction is defined primarily by **vocabulary repetition**, not structure. Same tokens with different graph structure cannot escape. Only domain shift (natural language) breaks the attractor.
+
+#### 3. Recovery Dynamics
+
+- H2 injection: Re-collapses within 10 tokens (immediate)
+- Different graph: Transient disruption, recovers to 0.97 within 50 tokens
+- Natural language: **Never recovers** — stays at 0.40-0.49 for remaining 5000 tokens
+- This implies the structured walk attractor has a well-defined basin boundary that natural text crosses but same-domain text does not
+
+#### 4. Layer-wise Attractor Formation
+
+From reversal data, the attractor is strongest at Layer 27 (cos_sim=0.97) and progressively weaker at earlier layers. When natural language breaks the attractor:
+- Layer 27 drops from 0.97 to 0.80 immediately, then to 0.40
+- Layer 0 barely affected (already low cos_sim)
+- This suggests the attractor is primarily a **late-layer phenomenon**
+
+### Plots Generated
+- `results/attractor_dynamics/attractor_escape_landscape.png` - Before/after injection comparison
+- `results/attractor_dynamics/attractor_taxonomy.png` - Scatter of all experiments by attractor type
+- `results/attractor_dynamics/layerwise_attractor_formation.png` - Layer-wise trajectories
+
+---
+
+## 2026-02-13: 32K Context Collapse Experiment
+
+**Model**: Qwen/Qwen2.5-7B (base)
+**Conditions**: structured_no_ambig, structured_full_ambig, natural_books, natural_conversation
+**Trials**: 3 per condition (12 total)
+**Context length**: 32,000 tokens with 23 checkpoints (100 to 32000)
+**Layers**: 0, 7, 14, 21, 27
+**Window size**: 50
+
+### Bug Fix
+Fixed `src/metrics/collapse_metrics.py:200`: `if l2_dists:` → `if len(l2_dists) > 0:` on numpy array from `pdist()`. This caused "truth value of array is ambiguous" error at every checkpoint when `compute_diagnostics=True`.
+
+### Key Results
+
+**Finding 1: Collapse is CONTENT-DEPENDENT, not universal**
+- Structured walks: Early/mid layers collapse dramatically at 32K
+- Natural language: NO collapse at ANY layer, even at 32K tokens
+
+**Finding 2: Layer-dependent collapse dynamics for structured content**
+| Layer | structured_no_ambig | structured_full_ambig | natural_books | natural_convo |
+|-------|--------------------|-----------------------|---------------|---------------|
+| L0  | dim 12.7→8.3 (mild) | dim 8.5→6.1 (mild) | dim 12.7→29.1 (expand) | dim 31.6→28.3 (stable) |
+| L7  | dim 14.3→**1.2** (collapse!) | dim 10.6→3.2 | dim 14.4→26.8 (expand) | dim 25.7→25.3 (stable) |
+| L14 | dim 14.7→**1.4** (collapse!) | dim 12.4→3.5 | dim 13.1→23.4 (expand) | dim 21.1→21.2 (stable) |
+| L21 | dim 13.7→4.0 (compress) | dim 11.3→6.9 | dim 13.7→23.5 (expand) | dim 19.3→21.3 (stable) |
+| L27 | dim 8.7→5.9 (mild) | dim 6.2→4.7 (mild) | dim 6.9→17.0 (expand) | dim 15.2→14.9 (stable) |
+
+**Finding 3: Structured content collapse is worst in early/middle layers**
+- Layers 7 and 14 collapse to effective dimension ~1 (single-dimensional!)
+- Layer 27 barely compresses (dim 8.7→5.9)
+- This is the OPPOSITE of the 10K generation experiments where collapse was strongest at L27
+
+**Finding 4: Ambiguity provides partial protection**
+- No-ambig collapses harder than full-ambig (L7: dim 1.2 vs 3.2)
+- Ambiguous walks maintain slightly higher dimensionality throughout
+
+**Finding 5: Natural language is inherently diverse**
+- Books: eff_dim 20-30 across all layers, stable to 32K
+- Conversations: eff_dim 15-25, completely stable
+- Cosine similarity stays LOW (0.25-0.49) for natural language
+
+### Interpretation
+The 10K experiments (using model-generated output) showed collapse increasing at later layers because generation creates self-reinforcing loops. The 32K experiment uses pre-generated input tokens (no generation loop), so we see the raw representational dynamics:
+- Repetitive structured vocabulary → early/mid layer collapse
+- Diverse natural language → no collapse at any scale
+- The generation loop (from prior experiments) amplifies collapse at later layers
+
+### Plots Generated
+- `results/collapse_32k_experiment/collapse_32k_effective_dim.png` - Eff dim trajectory by layer
+- `results/collapse_32k_experiment/collapse_32k_cos_sim.png` - Cosine similarity trajectory by layer
+- `results/collapse_32k_experiment/collapse_32k_l2_dist.png` - L2 distance trajectory by layer
+- `results/collapse_32k_experiment/collapse_32k_heatmap_dim.png` - Effective dim heatmap
+- `results/collapse_32k_experiment/collapse_32k_heatmap_cos.png` - Cosine similarity heatmap
+- `results/collapse_32k_experiment/collapse_32k_summary_bars.png` - Final metrics comparison
+
+---
+
+## 2026-02-17: Probing Collapse-Performance Link
+
+**Model**: Qwen/Qwen2.5-7B-Instruct
+**Writeup**: `experiments/2026-02-17_probing-collapse-performance.md`
+
+Tests whether representational collapse actually impairs knowledge retrieval.
+
+### Three Experiments
+
+**1. Original (2,580 evaluations)**: 4 context types x 7 lengths x 60 questions
+- Structured walk degrades: 97% (500) → 10% (20K)
+- Natural books stable: ~97% throughout
+- Repeated token fastest degradation: 87% (500) → 0% (20K)
+- Correlation collapse vs log-prob: r = -0.324
+
+**2. Ignore instruction (1,020 evaluations)**: Raw ignore tokens injected after context
+- Helps at moderate lengths: +46.7% for repeated_token at 5K
+- Ineffective at 20K; slightly counterproductive for structured_walk
+
+**3. Chat template (1,980 evaluations)**: Context wrapped in proper ChatML format
+- Structured walk benefits significantly at 20K: 10% → 26.7%
+- Chat + ignore is best overall strategy for structured walk (95.6% at 5K, 82.8% at 10K)
+- Repeated token: chat template actually *hurts* at 5K (8.3% → 0%)
+- Key insight: formatting helps structured content but not degenerate content
+
+### Conclusions
+- Collapse IS functionally harmful (not epiphenomenal)
+- Content-type and formatting interact: no single mitigation works universally
+- The 20K wall remains for all strategies (~27% max for structured walk)
+- Attention flooding hypothesis supported: collapsed KV entries dominate attention
+
+### Results
+- `results/probing_collapse_performance/` - original
+- `results/probing_collapse_ignore/` - ignore instruction
+- `results/probing_collapse_chat/` - chat template
+- Plots in `results/probing_collapse_performance/plots/`
+
+---

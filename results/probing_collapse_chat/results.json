@@ -1,0 +1,717 @@
+{
+  "config": {
+    "model": "Qwen/Qwen2.5-7B-Instruct",
+    "layers": [
+      0,
+      7,
+      14,
+      21,
+      27
+    ],
+    "context_lengths": [
+      0,
+      2000,
+      5000,
+      10000,
+      20000
+    ],
+    "context_types": [
+      "no_context",
+      "structured_walk_chat",
+      "structured_walk_chat_ignore",
+      "repeated_token_chat",
+      "repeated_token_chat_ignore"
+    ],
+    "n_trials": 3,
+    "n_questions": 60,
+    "question_categories": {
+      "A_factual": 18,
+      "B_reasoning": 16,
+      "C_word_knowledge": 11,
+      "D_multi_token": 15
+    },
+    "use_chat_template": true,
+    "chunk_size": 512,
+    "timestamp": "20260217_074309",
+    "quick_test": false
+  },
+  "aggregated": {
+    "no_context": {
+      "0": {
+        "accuracy": 1.0,
+        "mean_log_prob": -0.5661197380059294,
+        "std_log_prob": 1.3493602661022082,
+        "n_evaluations": 60,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 1.0,
+            "mean_log_prob": -0.020129733946588305,
+            "std_log_prob": 0.047486385020770065,
+            "n": 18
+          },
+          "B_reasoning": {
+            "accuracy": 1.0,
+            "mean_log_prob": -0.13597086643179257,
+            "std_log_prob": 0.5264750907193358,
+            "n": 16
+          },
+          "C_word_knowledge": {
+            "accuracy": 1.0,
+            "mean_log_prob": -2.8001034512664336,
+            "std_log_prob": 1.8373770848879394,
+            "n": 11
+          },
+          "D_multi_token": {
+            "accuracy": 1.0,
+            "mean_log_prob": -0.041878482831848994,
+            "std_log_prob": 0.13885069572660208,
+            "n": 15
+          }
+        },
+        "collapse_cos_sim_mean": null,
+        "collapse_eff_dim_mean": null,
+        "collapse_spread_mean": null
+      }
+    },
+    "structured_walk_chat": {
+      "2000": {
+        "accuracy": 0.9888888888888889,
+        "mean_log_prob": -0.8137816306231198,
+        "std_log_prob": 1.8615174809850041,
+        "n_evaluations": 180,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 1.0,
+            "mean_log_prob": -0.01595507679898062,
+            "std_log_prob": 0.03086753989740648,
+            "n": 54
+          },
+          "B_reasoning": {
+            "accuracy": 0.9791666666666666,
+            "mean_log_prob": -0.17623361460864542,
+            "std_log_prob": 0.592238431687857,
+            "n": 48
+          },
+          "C_word_knowledge": {
+            "accuracy": 1.0,
+            "mean_log_prob": -4.016847110757924,
+            "std_log_prob": 2.385063144906898,
+            "n": 33
+          },
+          "D_multi_token": {
+            "accuracy": 0.9777777777777777,
+            "mean_log_prob": -0.10231002686200318,
+            "std_log_prob": 0.29464094032516713,
+            "n": 45
+          }
+        },
+        "collapse_cos_sim_mean": 0.6762445370356241,
+        "collapse_eff_dim_mean": 2.66864013671875,
+        "collapse_spread_mean": 77124.84375
+      },
+      "5000": {
+        "accuracy": 0.9,
+        "mean_log_prob": -1.010695483756286,
+        "std_log_prob": 1.8885624005106492,
+        "n_evaluations": 180,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 0.9444444444444444,
+            "mean_log_prob": -0.1668754196093406,
+            "std_log_prob": 0.37274014369999975,
+            "n": 54
+          },
+          "B_reasoning": {
+            "accuracy": 0.9375,
+            "mean_log_prob": -0.42921202816069126,
+            "std_log_prob": 0.8629660679312189,
+            "n": 48
+          },
+          "C_word_knowledge": {
+            "accuracy": 0.8787878787878788,
+            "mean_log_prob": -4.30215274083494,
+            "std_log_prob": 2.1228231185595687,
+            "n": 33
+          },
+          "D_multi_token": {
+            "accuracy": 0.8222222222222222,
+            "mean_log_prob": -0.22979325817690954,
+            "std_log_prob": 0.48093272077630167,
+            "n": 45
+          }
+        },
+        "collapse_cos_sim_mean": 0.6644409894943237,
+        "collapse_eff_dim_mean": 2.6188125610351562,
+        "collapse_spread_mean": 89013.69270833333
+      },
+      "10000": {
+        "accuracy": 0.7666666666666667,
+        "mean_log_prob": -1.7586168639637807,
+        "std_log_prob": 1.9687430073938779,
+        "n_evaluations": 180,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 0.8518518518518519,
+            "mean_log_prob": -1.3174939818956233,
+            "std_log_prob": 1.521833536180462,
+            "n": 54
+          },
+          "B_reasoning": {
+            "accuracy": 0.8125,
+            "mean_log_prob": -1.3824478818310633,
+            "std_log_prob": 1.5877332626004623,
+            "n": 48
+          },
+          "C_word_knowledge": {
+            "accuracy": 0.696969696969697,
+            "mean_log_prob": -4.32239955663681,
+            "std_log_prob": 1.8261241284698495,
+            "n": 33
+          },
+          "D_multi_token": {
+            "accuracy": 0.6666666666666666,
+            "mean_log_prob": -0.8091039287602461,
+            "std_log_prob": 1.218192574008603,
+            "n": 45
+          }
+        },
+        "collapse_cos_sim_mean": 0.6949039697647095,
+        "collapse_eff_dim_mean": 2.4088404973347983,
+        "collapse_spread_mean": 84473.01822916667
+      },
+      "20000": {
+        "accuracy": 0.26666666666666666,
+        "mean_log_prob": -7.344085086617204,
+        "std_log_prob": 3.3447696623047407,
+        "n_evaluations": 180,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 0.4444444444444444,
+            "mean_log_prob": -7.838043159724754,
+            "std_log_prob": 3.451309554375799,
+            "n": 54
+          },
+          "B_reasoning": {
+            "accuracy": 0.125,
+            "mean_log_prob": -6.122738493978978,
+            "std_log_prob": 2.9598586657785972,
+            "n": 48
+          },
+          "C_word_knowledge": {
+            "accuracy": 0.45454545454545453,
+            "mean_log_prob": -9.42769189314409,
+            "std_log_prob": 2.9677140326287175,
+            "n": 33
+          },
+          "D_multi_token": {
+            "accuracy": 0.06666666666666667,
+            "mean_log_prob": -6.526126772915877,
+            "std_log_prob": 2.9859474497500713,
+            "n": 45
+          }
+        },
+        "collapse_cos_sim_mean": 0.8054132262865702,
+        "collapse_eff_dim_mean": 2.973689635594686,
+        "collapse_spread_mean": 59177.830729166664
+      }
+    },
+    "structured_walk_chat_ignore": {
+      "2000": {
+        "accuracy": 0.9833333333333333,
+        "mean_log_prob": -0.7153882010115518,
+        "std_log_prob": 1.7237569395171692,
+        "n_evaluations": 180,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 1.0,
+            "mean_log_prob": -0.009965422124038507,
+            "std_log_prob": 0.020274873872589038,
+            "n": 54
+          },
+          "B_reasoning": {
+            "accuracy": 1.0,
+            "mean_log_prob": -0.13477740987307496,
+            "std_log_prob": 0.521404713084166,
+            "n": 48
+          },
+          "C_word_knowledge": {
+            "accuracy": 1.0,
+            "mean_log_prob": -3.6088333039572746,
+            "std_log_prob": 2.3470957505327217,
+            "n": 33
+          },
+          "D_multi_token": {
+            "accuracy": 0.9333333333333333,
+            "mean_log_prob": -0.059353970730746226,
+            "std_log_prob": 0.1686656204397965,
+            "n": 45
+          }
+        },
+        "collapse_cos_sim_mean": 0.17780606945355734,
+        "collapse_eff_dim_mean": 19.279696782430012,
+        "collapse_spread_mean": 83156.29947916667
+      },
+      "5000": {
+        "accuracy": 0.9555555555555556,
+        "mean_log_prob": -0.777716211836647,
+        "std_log_prob": 1.7284780361935168,
+        "n_evaluations": 180,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 1.0,
+            "mean_log_prob": -0.041498293258525706,
+            "std_log_prob": 0.09048418742908185,
+            "n": 54
+          },
+          "B_reasoning": {
+            "accuracy": 0.9583333333333334,
+            "mean_log_prob": -0.21084606361885863,
+            "std_log_prob": 0.6061147946123973,
+            "n": 48
+          },
+          "C_word_knowledge": {
+            "accuracy": 1.0,
+            "mean_log_prob": -3.666842738185266,
+            "std_log_prob": 2.293354551527582,
+            "n": 33
+          },
+          "D_multi_token": {
+            "accuracy": 0.8666666666666667,
+            "mean_log_prob": -0.14714641957371322,
+            "std_log_prob": 0.4241823480523374,
+            "n": 45
+          }
+        },
+        "collapse_cos_sim_mean": 0.17943769693374634,
+        "collapse_eff_dim_mean": 19.147798538208008,
+        "collapse_spread_mean": 85745.61458333333
+      },
+      "10000": {
+        "accuracy": 0.8277777777777777,
+        "mean_log_prob": -0.9629726436182305,
+        "std_log_prob": 1.6307478361330132,
+        "n_evaluations": 180,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 0.9074074074074074,
+            "mean_log_prob": -0.2630519117470141,
+            "std_log_prob": 0.5258401183160084,
+            "n": 54
+          },
+          "B_reasoning": {
+            "accuracy": 0.875,
+            "mean_log_prob": -0.5391972875843445,
+            "std_log_prob": 0.9469465498373106,
+            "n": 48
+          },
+          "C_word_knowledge": {
+            "accuracy": 0.8484848484848485,
+            "mean_log_prob": -3.1420709557003446,
+            "std_log_prob": 2.271272547229736,
+            "n": 33
+          },
+          "D_multi_token": {
+            "accuracy": 0.6666666666666666,
+            "mean_log_prob": -0.6568991394396181,
+            "std_log_prob": 1.1003219533133406,
+            "n": 45
+          }
+        },
+        "collapse_cos_sim_mean": 0.19129668176174164,
+        "collapse_eff_dim_mean": 19.93516667683919,
+        "collapse_spread_mean": 85783.6796875
+      },
+      "20000": {
+        "accuracy": 0.2722222222222222,
+        "mean_log_prob": -7.115268307030201,
+        "std_log_prob": 3.294743256775518,
+        "n_evaluations": 180,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 0.46296296296296297,
+            "mean_log_prob": -7.528360945391065,
+            "std_log_prob": 3.3053124803047407,
+            "n": 54
+          },
+          "B_reasoning": {
+            "accuracy": 0.14583333333333334,
+            "mean_log_prob": -6.180424439989859,
+            "std_log_prob": 3.3335205787525113,
+            "n": 48
+          },
+          "C_word_knowledge": {
+            "accuracy": 0.3939393939393939,
+            "mean_log_prob": -8.669978209216186,
+            "std_log_prob": 2.2126951505222707,
+            "n": 33
+          },
+          "D_multi_token": {
+            "accuracy": 0.08888888888888889,
+            "mean_log_prob": -6.476603337570473,
+            "std_log_prob": 3.3985594349618005,
+            "n": 45
+          }
+        },
+        "collapse_cos_sim_mean": 0.32427361607551575,
+        "collapse_eff_dim_mean": 15.745847384134928,
+        "collapse_spread_mean": 89858.29947916667
+      }
+    },
+    "repeated_token_chat": {
+      "2000": {
+        "accuracy": 0.8,
+        "mean_log_prob": -3.1356319453318915,
+        "std_log_prob": 2.1594071774884718,
+        "n_evaluations": 60,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 0.8888888888888888,
+            "mean_log_prob": -3.780916940062135,
+            "std_log_prob": 2.0838101738775485,
+            "n": 18
+          },
+          "B_reasoning": {
+            "accuracy": 0.625,
+            "mean_log_prob": -2.583099595705668,
+            "std_log_prob": 2.009616665283991,
+            "n": 16
+          },
+          "C_word_knowledge": {
+            "accuracy": 0.9090909090909091,
+            "mean_log_prob": -4.946765668464429,
+            "std_log_prob": 1.7169574352959909,
+            "n": 11
+          },
+          "D_multi_token": {
+            "accuracy": 0.8,
+            "mean_log_prob": -1.6224930609597101,
+            "std_log_prob": 1.2047527456488745,
+            "n": 15
+          }
+        },
+        "collapse_cos_sim_mean": 0.7470856308937073,
+        "collapse_eff_dim_mean": 1.3637162446975708,
+        "collapse_spread_mean": 172659.09375
+      },
+      "5000": {
+        "accuracy": 0.0,
+        "mean_log_prob": -5.74489491780599,
+        "std_log_prob": 3.1258580748844262,
+        "n_evaluations": 60,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 0.0,
+            "mean_log_prob": -6.5837804723668985,
+            "std_log_prob": 3.7105709536227796,
+            "n": 18
+          },
+          "B_reasoning": {
+            "accuracy": 0.0,
+            "mean_log_prob": -4.495524088541666,
+            "std_log_prob": 1.3982419448977608,
+            "n": 16
+          },
+          "C_word_knowledge": {
+            "accuracy": 0.0,
+            "mean_log_prob": -7.751864346590909,
+            "std_log_prob": 3.926247710967786,
+            "n": 11
+          },
+          "D_multi_token": {
+            "accuracy": 0.0,
+            "mean_log_prob": -4.599116889105902,
+            "std_log_prob": 1.5478389173454066,
+            "n": 15
+          }
+        },
+        "collapse_cos_sim_mean": 0.7708510160446167,
+        "collapse_eff_dim_mean": 1.3487719297409058,
+        "collapse_spread_mean": 244517.21875
+      },
+      "10000": {
+        "accuracy": 0.0,
+        "mean_log_prob": -6.6725402832031255,
+        "std_log_prob": 2.9395652169773316,
+        "n_evaluations": 60,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 0.0,
+            "mean_log_prob": -7.427524594907409,
+            "std_log_prob": 3.498297568188876,
+            "n": 18
+          },
+          "B_reasoning": {
+            "accuracy": 0.0,
+            "mean_log_prob": -4.300065104166666,
+            "std_log_prob": 0.9678975807527291,
+            "n": 16
+          },
+          "C_word_knowledge": {
+            "accuracy": 0.0,
+            "mean_log_prob": -8.91522401751894,
+            "std_log_prob": 2.90594878532671,
+            "n": 11
+          },
+          "D_multi_token": {
+            "accuracy": 0.0,
+            "mean_log_prob": -6.652564561631944,
+            "std_log_prob": 1.5198197795572594,
+            "n": 15
+          }
+        },
+        "collapse_cos_sim_mean": 0.8111485838890076,
+        "collapse_eff_dim_mean": 1.170064926147461,
+        "collapse_spread_mean": 228863.96875
+      },
+      "20000": {
+        "accuracy": 0.016666666666666666,
+        "mean_log_prob": -6.920106268988716,
+        "std_log_prob": 2.479846615870896,
+        "n_evaluations": 60,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 0.05555555555555555,
+            "mean_log_prob": -7.015256076388889,
+            "std_log_prob": 2.399018999338369,
+            "n": 18
+          },
+          "B_reasoning": {
+            "accuracy": 0.0,
+            "mean_log_prob": -5.226497395833333,
+            "std_log_prob": 1.117618267297361,
+            "n": 16
+          },
+          "C_word_knowledge": {
+            "accuracy": 0.0,
+            "mean_log_prob": -9.592525597774621,
+            "std_log_prob": 2.886336324559408,
+            "n": 11
+          },
+          "D_multi_token": {
+            "accuracy": 0.0,
+            "mean_log_prob": -6.6526684570312495,
+            "std_log_prob": 1.367937506087446,
+            "n": 15
+          }
+        },
+        "collapse_cos_sim_mean": 0.8278908133506775,
+        "collapse_eff_dim_mean": 1.2777401208877563,
+        "collapse_spread_mean": 253888.796875
+      }
+    },
+    "repeated_token_chat_ignore": {
+      "2000": {
+        "accuracy": 0.8166666666666667,
+        "mean_log_prob": -1.311478066676193,
+        "std_log_prob": 1.6691975278294817,
+        "n_evaluations": 60,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 0.8333333333333334,
+            "mean_log_prob": -0.871665526981707,
+            "std_log_prob": 1.0175276470820098,
+            "n": 18
+          },
+          "B_reasoning": {
+            "accuracy": 0.75,
+            "mean_log_prob": -1.7332752550641697,
+            "std_log_prob": 2.3692677083091604,
+            "n": 16
+          },
+          "C_word_knowledge": {
+            "accuracy": 0.8181818181818182,
+            "mean_log_prob": -2.4607302781307334,
+            "std_log_prob": 1.3954146493924473,
+            "n": 11
+          },
+          "D_multi_token": {
+            "accuracy": 0.8666666666666667,
+            "mean_log_prob": -0.5465511582957373,
+            "std_log_prob": 0.7150338942682969,
+            "n": 15
+          }
+        },
+        "collapse_cos_sim_mean": 0.3644620478153229,
+        "collapse_eff_dim_mean": 16.043975830078125,
+        "collapse_spread_mean": 137050.625
+      },
+      "5000": {
+        "accuracy": 0.4666666666666667,
+        "mean_log_prob": -5.015888387627071,
+        "std_log_prob": 2.8375494900189966,
+        "n_evaluations": 60,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 0.7777777777777778,
+            "mean_log_prob": -5.901480088410554,
+            "std_log_prob": 3.185669352331281,
+            "n": 18
+          },
+          "B_reasoning": {
+            "accuracy": 0.125,
+            "mean_log_prob": -4.226176770528157,
+            "std_log_prob": 1.7592026349242793,
+            "n": 16
+          },
+          "C_word_knowledge": {
+            "accuracy": 0.5454545454545454,
+            "mean_log_prob": -6.75430205374053,
+            "std_log_prob": 3.4755031108116743,
+            "n": 11
+          },
+          "D_multi_token": {
+            "accuracy": 0.4,
+            "mean_log_prob": -3.5207007164425326,
+            "std_log_prob": 1.3458445432135413,
+            "n": 15
+          }
+        },
+        "collapse_cos_sim_mean": 0.5367515683174133,
+        "collapse_eff_dim_mean": 14.159587860107422,
+        "collapse_spread_mean": 114243.0625
+      },
+      "10000": {
+        "accuracy": 0.016666666666666666,
+        "mean_log_prob": -6.749088846842448,
+        "std_log_prob": 3.092858700482218,
+        "n_evaluations": 60,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 0.05555555555555555,
+            "mean_log_prob": -7.704882812499999,
+            "std_log_prob": 3.7839058718389444,
+            "n": 18
+          },
+          "B_reasoning": {
+            "accuracy": 0.0,
+            "mean_log_prob": -4.4384765625,
+            "std_log_prob": 1.0523837062994463,
+            "n": 16
+          },
+          "C_word_knowledge": {
+            "accuracy": 0.0,
+            "mean_log_prob": -9.033698804450758,
+            "std_log_prob": 3.0985541648068367,
+            "n": 11
+          },
+          "D_multi_token": {
+            "accuracy": 0.0,
+            "mean_log_prob": -6.391408555772569,
+            "std_log_prob": 1.4535563124066628,
+            "n": 15
+          }
+        },
+        "collapse_cos_sim_mean": 0.5533840656280518,
+        "collapse_eff_dim_mean": 11.81576156616211,
+        "collapse_spread_mean": 115931.7578125
+      },
+      "20000": {
+        "accuracy": 0.0,
+        "mean_log_prob": -6.588101738823784,
+        "std_log_prob": 2.6414560340271676,
+        "n_evaluations": 60,
+        "category_stats": {
+          "A_factual": {
+            "accuracy": 0.0,
+            "mean_log_prob": -6.92365451388889,
+            "std_log_prob": 2.9232899725196204,
+            "n": 18
+          },
+          "B_reasoning": {
+            "accuracy": 0.0,
+            "mean_log_prob": -4.4692626953125005,
+            "std_log_prob": 0.8375551404482672,
+            "n": 16
+          },
+          "C_word_knowledge": {
+            "accuracy": 0.0,
+            "mean_log_prob": -9.016608960700758,
+            "std_log_prob": 2.7380699957036083,
+            "n": 11
+          },
+          "D_multi_token": {
+            "accuracy": 0.0,
+            "mean_log_prob": -6.664628092447916,
+            "std_log_prob": 1.4675270544302814,
+            "n": 15
+          }
+        },
+        "collapse_cos_sim_mean": 0.593750536441803,
+        "collapse_eff_dim_mean": 10.420037269592285,
+        "collapse_spread_mean": 108731.859375
+      }
+    }
+  },
+  "correlation_collapse_vs_logprob": -0.3163931479507736,
+  "n_total_evaluations": 1980,
+  "screened_questions": {
+    "A_factual": [
+      "What is the capital of France?",
+      "What is the chemical symbol for gold?",
+      "How many planets are in the solar system?",
+      "What is the capital of Myanmar?",
+      "What element has atomic number 79?",
+      "In what year did the Berlin Wall fall?",
+      "What is the longest river in Africa?",
+      "What is the chemical symbol for tungsten?",
+      "How many bones are in the adult human body?",
+      "What is the capital of New Zealand?",
+      "What is the most abundant element in the Earth's crust?",
+      "What is the half-life of Carbon-14 in years?",
+      "What is the capital of Bhutan?",
+      "What is the atomic number of Osmium?",
+      "In what year was the Treaty of Westphalia signed?",
+      "What is the speed of sound in air at 20C in m/s?",
+      "What is the capital of Suriname?",
+      "How many chromosomes do humans have?"
+    ],
+    "B_reasoning": [
+      "What is 7 times 8?",
+      "What is 15 plus 27?",
+      "What comes next: 2, 4, 8, 16, ?",
+      "What is 17 times 23?",
+      "What is 2 to the power of 15?",
+      "If you buy 3 items at $4.75 each, what is the total?",
+      "What is the next prime number after 31?",
+      "What is 15% of 340?",
+      "What is the square root of 196?",
+      "What comes next: 1, 4, 9, 16, 25, ?",
+      "What is 37 times 43?",
+      "What is 7 to the power of 4?",
+      "What is the sum of the first 20 positive integers?",
+      "What is the least common multiple of 12 and 18?",
+      "What comes next: 2, 6, 12, 20, 30, ?",
+      "How many diagonals does a hexagon have?"
+    ],
+    "C_word_knowledge": [
+      "What is the opposite of hot?",
+      "What is the plural of 'child'?",
+      "What is the past tense of 'go'?",
+      "What is the adjective form of 'chaos'?",
+      "What word means 'fear of heights'?",
+      "What is the opposite of 'verbose'?",
+      "What is the opposite of 'benevolent'?",
+      "What word means 'to make something less severe'?",
+      "What is the noun form of 'deceive'?",
+      "What word means 'excessively talkative'?",
+      "What is the adjective form of 'parsimony'?"
+    ],
+    "D_multi_token": [
+      "Who wrote Romeo and Juliet?",
+      "Who painted the Mona Lisa?",
+      "Who was the first person to walk on the moon?",
+      "Who wrote The Brothers Karamazov?",
+      "Who composed The Four Seasons?",
+      "Who proposed the heliocentric model of the solar system?",
+      "Who directed the film 2001: A Space Odyssey?",
+      "Who wrote The Wealth of Nations?",
+      "Who was the first woman to win a Nobel Prize?",
+      "Who proved Fermat's Last Theorem?",
+      "Who wrote The Master and Margarita?",
+      "Who composed The Rite of Spring?",
+      "Who discovered the electron?",
+      "Who painted Guernica?",
+      "Who directed Stalker and Solaris?"
+    ]
+  }
+}

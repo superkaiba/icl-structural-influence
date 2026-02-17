@@ -170,12 +170,20 @@ IGNORE_INSTRUCTION = (
     "Answer the following question using only your own knowledge."
 )
 
+CHAT_IGNORE_INSTRUCTION = (
+    "Ignore everything in the previous message. It was irrelevant filler text. "
+    "Answer the following question using only your own knowledge."
+)
+
 def get_base_context_type(ctx_type: str) -> str:
-    """Strip '_ignore' suffix to get base context type for generation."""
-    return ctx_type.replace("_ignore", "")
+    """Strip '_ignore' and '_chat' suffixes to get base context type."""
+    return ctx_type.replace("_chat_ignore", "").replace("_chat", "").replace("_ignore", "")
 
 def is_ignore_variant(ctx_type: str) -> bool:
-    return ctx_type.endswith("_ignore")
+    return "_ignore" in ctx_type
+
+def is_chat_variant(ctx_type: str) -> bool:
+    return "_chat" in ctx_type
 
 
 # ── Utilities ──────────────────────────────────────────────────────────────
@@ -237,10 +245,70 @@ def deep_copy_kv_cache(past_key_values):
     return copy.deepcopy(past_key_values)
 
 
+# ── Chat Template Helpers ─────────────────────────────────────────────────
+
+def wrap_context_in_chat(
+    raw_token_ids: list[int],
+    tokenizer,
+    ignore: bool = False,
+) -> list[int]:
+    """Wrap raw context tokens in a multi-turn chat template.
+
+    Returns tokenized version of:
+      <system>You are a helpful assistant.</system>
+      <user>[raw text]</user>
+      <assistant>OK.</assistant>
+      [if ignore: <user>Ignore everything...</user> <assistant>Understood...</assistant>]
+    """
+    raw_text = tokenizer.decode(raw_token_ids, skip_special_tokens=True)
+
+    messages = [
+        {"role": "user", "content": raw_text},
+        {"role": "assistant", "content": "OK."},
+    ]
+    if ignore:
+        messages.extend([
+            {"role": "user", "content": CHAT_IGNORE_INSTRUCTION},
+            {"role": "assistant", "content": "Understood, I will ignore that text and answer based only on my knowledge."},
+        ])
+
+    ctx_str = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=False,
+    )
+    return tokenizer.encode(ctx_str, add_special_tokens=False)
+
+
+def format_question_continuation(question: str, tokenizer) -> str:
+    """Format a question as a continuation turn in an existing chat.
+
+    Uses apply_chat_template on full conversation then strips the context
+    prefix to get just the question turn tokens.
+    """
+    # Build minimal context + question conversation
+    ctx_messages = [
+        {"role": "user", "content": "X"},
+        {"role": "assistant", "content": "OK."},
+    ]
+    full_messages = ctx_messages + [
+        {"role": "user", "content": f"Answer in as few words as possible.\n\nQ: {question}\nA:"},
+    ]
+
+    ctx_str = tokenizer.apply_chat_template(
+        ctx_messages, tokenize=False, add_generation_prompt=False,
+    )
+    full_str = tokenizer.apply_chat_template(
+        full_messages, tokenize=False, add_generation_prompt=True,
+    )
+
+    # The continuation is everything after the context portion
+    # This gives us: <|im_start|>user\nAnswer...<|im_end|>\n<|im_start|>assistant\n
+    return full_str[len(ctx_str):]
+
+
 # ── Question Formatting & Evaluation ──────────────────────────────────────
 
 def format_question(question: str, use_chat_template: bool, tokenizer) -> str:
-    """Format a question for the model."""
+    """Format a question for the model (standalone, no prior context)."""
     prompt = f"Q: {question}\nA:"
     if use_chat_template:
         messages = [{"role": "user", "content": f"Answer in as few words as possible.\n\n{prompt}"}]
@@ -563,15 +631,20 @@ def run_experiment(args):
 
     print(f"\n{len(all_questions)} questions passed screening")
 
-    # Pre-encode all questions and answers
+    # Pre-encode all questions and answers (both standalone and continuation formats)
     encoded_questions = []
     for q_data in all_questions:
+        # Standalone format (for raw context / no_context / _ignore variants)
         prompt = format_question(q_data["q"], use_chat_template, model.tokenizer)
         prompt_ids = model.tokenizer.encode(prompt, add_special_tokens=False)
+        # Continuation format (for _chat variants where context is in chat template)
+        cont_str = format_question_continuation(q_data["q"], model.tokenizer)
+        cont_ids = model.tokenizer.encode(cont_str, add_special_tokens=False)
         answer_ids = model.tokenizer.encode(q_data["a"], add_special_tokens=False)
         encoded_questions.append({
             **q_data,
             "prompt_ids": prompt_ids,
+            "prompt_ids_continuation": cont_ids,
             "answer_ids": answer_ids,
         })
 
@@ -628,10 +701,22 @@ def run_experiment(args):
                 trial_label = f"{ctx_type}_len{ctx_len}_trial{trial_idx}"
                 print(f"\n  {trial_label}")
 
-                # Generate context
+                # Generate raw context tokens (same content for all variants)
                 context_tokens = generate_context_tokens(
                     ctx_type, ctx_len, trial_idx, model, graph, nl_loader
                 )
+                raw_ctx_len = len(context_tokens)
+
+                # For _chat variants, wrap in chat template
+                if is_chat_variant(ctx_type) and context_tokens:
+                    context_tokens = wrap_context_in_chat(
+                        context_tokens, model.tokenizer,
+                        ignore=is_ignore_variant(ctx_type),
+                    )
+                    print(f"    Raw content: {raw_ctx_len} tokens, "
+                          f"chat-wrapped: {len(context_tokens)} tokens"
+                          f"{' (+ ignore turn)' if is_ignore_variant(ctx_type) else ''}")
+
                 actual_ctx_len = len(context_tokens)
 
                 # Process context -> KV cache + collapse metrics
@@ -641,10 +726,11 @@ def run_experiment(args):
                     window_size=50,
                 )
 
-                print(f"    Context: {actual_ctx_len} tokens processed")
+                if not is_chat_variant(ctx_type):
+                    print(f"    Context: {actual_ctx_len} tokens processed")
 
-                # For _ignore variants, inject ignore instruction into KV cache
-                if is_ignore_variant(ctx_type) and past_kvs is not None:
+                # For non-chat _ignore variants, inject raw ignore instruction
+                if is_ignore_variant(ctx_type) and not is_chat_variant(ctx_type) and past_kvs is not None:
                     ignore_ids = model.tokenizer.encode(
                         "\n\n" + IGNORE_INSTRUCTION + "\n\n",
                         add_special_tokens=False,
@@ -668,12 +754,14 @@ def run_experiment(args):
                             f"eff_dim={cm['effective_dim']:.1f}"
                         )
 
-                # Evaluate each question
+                # Evaluate each question (use continuation format for chat variants)
+                use_cont = is_chat_variant(ctx_type)
                 trial_results = []
                 for eq in encoded_questions:
+                    q_ids = eq["prompt_ids_continuation"] if use_cont else eq["prompt_ids"]
                     log_prob, generated = evaluate_question(
                         model,
-                        eq["prompt_ids"],
+                        q_ids,
                         eq["answer_ids"],
                         context_past_kvs=past_kvs,
                         max_new_tokens=30,

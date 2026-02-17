@@ -243,11 +243,120 @@ This supports the **attention flooding** hypothesis: collapsed KV entries don't 
 
 ---
 
+## Follow-up 2: Does Chat Template Formatting Help?
+
+**Date**: 2026-02-17
+
+### Motivation
+
+In the original experiment, collapse-inducing context was injected as **raw tokens** directly into the KV cache, bypassing the chat template entirely. The question was then presented in proper chat template format (ChatML for Qwen2.5-Instruct). This creates an unnatural input structure that the model was never trained on -- raw bytes followed by a formatted chat turn.
+
+A natural question: does wrapping the collapse-inducing context in proper chat template format (as a user message) help the model compartmentalize it and answer questions better? The model was trained on multi-turn conversations, so it might handle irrelevant-but-formatted context better than raw injection.
+
+### Design
+
+We wrap the raw context tokens in a multi-turn chat template structure:
+
+```
+<|im_start|>user
+[decoded raw context tokens]<|im_end|>
+<|im_start|>assistant
+OK.<|im_end|>
+<|im_start|>user
+Answer in as few words as possible.
+
+Q: [question]
+A:<|im_end|>
+<|im_start|>assistant
+```
+
+For `_chat_ignore` variants, we add an additional turn before the question:
+
+```
+<|im_start|>user
+Ignore everything in the previous message. It was irrelevant filler text.
+Answer the following question using only your own knowledge.<|im_end|>
+<|im_start|>assistant
+Understood, I will ignore that text and answer based only on my knowledge.<|im_end|>
+```
+
+Four new conditions tested at 2K, 5K, 10K, and 20K tokens:
+- `structured_walk_chat`: structured walk context wrapped in chat template
+- `structured_walk_chat_ignore`: chat-wrapped + explicit ignore turn
+- `repeated_token_chat`: repeated token in chat template
+- `repeated_token_chat_ignore`: chat-wrapped repeated token + ignore turn
+
+### Results: Accuracy Comparison
+
+#### Structured Walk
+
+| Context Length | Raw Injection | Raw + Ignore | Chat Template | Chat + Ignore |
+|---------------|--------------|--------------|---------------|---------------|
+| 2,000 | 89.4% | 97.8% | **98.9%** | 98.3% |
+| 5,000 | 87.8% | 93.3% | 90.0% | **95.6%** |
+| 10,000 | 78.3% | 80.0% | 76.7% | **82.8%** |
+| 20,000 | 10.0% | 2.2% | **26.7%** | 27.2% |
+
+#### Repeated Token
+
+| Context Length | Raw Injection | Raw + Ignore | Chat Template | Chat + Ignore |
+|---------------|--------------|--------------|---------------|---------------|
+| 2,000 | 63.3% | 73.3% | 80.0% | **81.7%** |
+| 5,000 | 8.3% | 55.0% | 0.0% | **46.7%** |
+| 10,000 | 1.7% | 3.3% | 0.0% | 1.7% |
+| 20,000 | 0.0% | 0.0% | 1.7% | 0.0% |
+
+### Figures
+
+#### Raw Injection vs Chat Template
+![Chat Comparison](../results/probing_collapse_performance/plots/accuracy_chat_comparison.png)
+
+Side-by-side comparison for structured walk (left) and repeated token (right). The chat template provides a significant boost at 20K for structured walk (10% → 26.7%), but actually *hurts* repeated token performance at 5K (8.3% → 0%). The chat + ignore variant (dashed orange/blue) provides the best performance for structured walk at mid-range lengths.
+
+#### Accuracy Change: Chat vs Raw
+![Chat Delta](../results/probing_collapse_performance/plots/accuracy_delta_chat.png)
+
+Bar chart showing the accuracy change from chat template wrapping vs raw injection at each context length. Structured walk benefits from chat template at most lengths, especially at 20K (+16.7%). Repeated token shows mixed effects: positive at 2K, severely negative at 5K (-8.3%), and negligible at longer lengths.
+
+#### Structured Walk: All Mitigation Strategies
+![Structured Walk All](../results/probing_collapse_performance/plots/structured_walk_all_variants.png)
+
+All 5 variants of structured walk context on a single plot. The chat + ignore variant (dashed orange) provides the most graceful degradation curve, maintaining 82.8% accuracy at 10K. All variants converge to ~27% at 20K (except raw + ignore which drops to 2.2%).
+
+#### Repeated Token: All Mitigation Strategies
+![Repeated Token All](../results/probing_collapse_performance/plots/repeated_token_all_variants.png)
+
+All 5 variants of repeated token context. The raw + ignore variant (dashed purple) provides the best mid-range performance (55% at 5K). The chat template alone (solid blue) performs worst at 5K (0%), suggesting the chat template overhead amplifies degenerate attention patterns for maximally homogeneous content. All variants reach 0% by 20K.
+
+#### All Conditions Combined
+![All Conditions](../results/probing_collapse_performance/plots/all_conditions_accuracy.png)
+
+Grand comparison of all 9 conditions plus natural books control. Natural books (green) remains at ~97% throughout. The spread of degradation curves reveals that both content type and formatting matter, with no single mitigation strategy working universally.
+
+### Interpretation
+
+The chat template experiment reveals a **format-dependent interaction**:
+
+1. **Structured walk + chat template**: Significant benefit. At 20K tokens, accuracy jumps from 10% (raw) to 26.7% (chat). The chat template provides structural boundaries (turn delimiters, role markers) that help the attention mechanism distinguish context from query. The model was trained to handle multi-turn conversations, so even irrelevant content in a proper turn format is handled better than raw byte injection.
+
+2. **Repeated token + chat template**: Harmful at mid-range. At 5K tokens, accuracy drops from 8.3% (raw) to 0% (chat). The chat template wrapping of 5K identical tokens creates a pathological input: the model interprets a user message consisting entirely of "the the the the..." and produces chat-formatted KV entries that are even more disruptive than raw injection. The chat template overhead adds special tokens that may create misleading attention anchors when the content is maximally degenerate.
+
+3. **Chat + ignore is the best overall strategy for structured walk**: At 5K (95.6%), 10K (82.8%), and even 20K (27.2%), the combination of proper formatting plus explicit ignore instruction provides the best performance. The chat format gives the ignore instruction proper conversational framing ("the previous message was irrelevant"), which the model handles more naturally than a raw ignore instruction injected into an unformatted byte stream.
+
+4. **The 20K wall remains**: Despite all mitigations, no strategy maintains >30% accuracy at 20K tokens of structured walk context. At this scale, the KV cache is dominated by ~20K collapsed entries vs ~50-100 question/instruction tokens. The attention mechanism simply cannot overcome this ratio, regardless of formatting.
+
+### Key Insight: Formatting Matters for *Structured* but Not *Degenerate* Context
+
+The chat template helps when the context has internal structure (distinct tokens, varied patterns) but is collapse-inducing due to restricted vocabulary. The template provides "handles" for the attention mechanism to grab onto. But for maximally degenerate content (identical tokens), the template adds overhead without providing useful structure -- the content is so uniform that chat formatting cannot create meaningful boundaries.
+
+---
+
 ## Raw Data
 
 - Original results: `results/probing_collapse_performance/results.json`
 - Ignore results: `results/probing_collapse_ignore/results.json`
-- Per-question results: `results/probing_collapse_performance/all_results.json`, `results/probing_collapse_ignore/all_results.json`
+- Chat template results: `results/probing_collapse_chat/results.json`
+- Per-question results: `results/probing_collapse_performance/all_results.json`, `results/probing_collapse_ignore/all_results.json`, `results/probing_collapse_chat/all_results.json`
 - Plots: `results/probing_collapse_performance/plots/`
 
 ## Notes

@@ -1,0 +1,36 @@
+{
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "layers": [
+    0,
+    7,
+    14,
+    21,
+    27
+  ],
+  "context_lengths": [
+    0,
+    2000,
+    5000,
+    10000,
+    20000
+  ],
+  "context_types": [
+    "no_context",
+    "structured_walk_chat",
+    "structured_walk_chat_ignore",
+    "repeated_token_chat",
+    "repeated_token_chat_ignore"
+  ],
+  "n_trials": 3,
+  "n_questions": 60,
+  "question_categories": {
+    "A_factual": 18,
+    "B_reasoning": 16,
+    "C_word_knowledge": 11,
+    "D_multi_token": 15
+  },
+  "use_chat_template": true,
+  "chunk_size": 512,
+  "timestamp": "20260217_074309",
+  "quick_test": false
+}
