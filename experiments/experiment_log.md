@@ -905,10 +905,20 @@ Tests whether representational collapse actually impairs knowledge retrieval.
 - The 20K wall remains for all strategies (~27% max for structured walk)
 - Attention flooding hypothesis supported: collapsed KV entries dominate attention
 
+**4. Collapse Trajectory (20K, 3 trials x 3 types x ~40 checkpoints)**
+- Measures cos_sim and eff_dim at 500-token intervals throughout context processing
+- **Key finding: Collapse is immediate, not cumulative** — all conditions establish their collapse level within the first ~500 tokens and maintain it flat throughout 20K
+- Structured walk: cos_sim ~0.95 stable from first measurement to last
+- Natural books: cos_sim ~0.30-0.40, variable (reflects content diversity)
+- Repeated token: cos_sim = 1.0, eff_dim = 1, perfectly flat
+- Middle layers (L14) show highest eff_dim for natural language (~20-30), suggesting peak representational diversity at intermediate processing
+- Implication: performance degradation comes from KV cache saturation (ratio of collapsed to useful entries), not progressive geometric collapse
+
 ### Results
 - `results/probing_collapse_performance/` - original
 - `results/probing_collapse_ignore/` - ignore instruction
 - `results/probing_collapse_chat/` - chat template
-- Plots in `results/probing_collapse_performance/plots/`
+- `results/collapse_trajectory/` - trajectory measurement
+- Plots in `results/probing_collapse_performance/plots/`, `results/collapse_trajectory/plots/`
 
 ---

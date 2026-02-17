@@ -351,13 +351,78 @@ The chat template helps when the context has internal structure (distinct tokens
 
 ---
 
+## Follow-up 3: Collapse Trajectory Over Context Length
+
+**Date**: 2026-02-17
+
+### Motivation
+
+Previous experiments measured collapse metrics only at the end of context processing (over the last 50 tokens). This tells us the final state but not the dynamics: does collapse build up gradually over context, or is it established immediately? Understanding the trajectory helps distinguish between:
+
+1. **Cumulative collapse**: Representations progressively converge as more context accumulates, suggesting the KV cache "fills up" with similar entries
+2. **Immediate/local collapse**: Collapse level is determined by the local content within the measurement window, not the total context length
+
+### Design
+
+Process 20K tokens for each of 3 context types, measuring collapse metrics (cos_sim, eff_dim, spread, intrinsic_dim) at every 500-token interval using a sliding window of the last 50 tokens. 5 layers × 3 context types × 3 trials × ~40 checkpoints per trial.
+
+- **Context types**: structured_walk, natural_books, repeated_token
+- **Max length**: 20,000 tokens
+- **Measurement interval**: every ~500 tokens (256-token chunks, measured when ≥500 tokens since last)
+- **Sliding window**: 50 tokens
+- **Trials**: 3 per condition
+- **Layers**: [0, 7, 14, 21, 27]
+
+### Results
+
+#### Combined Plot: Layer 27 Cosine Similarity & Effective Dimension
+![Trajectory Combined](../results/collapse_trajectory/plots/trajectory_combined.png)
+
+Three clearly separated regimes at Layer 27:
+- **Repeated token** (purple): cos_sim = 1.0, eff_dim = 1 throughout — perfect collapse, completely flat
+- **Structured walk** (red): cos_sim ~0.95, eff_dim ~5-6 — high collapse, remarkably stable from first measurement
+- **Natural books** (green): cos_sim ~0.30-0.40, eff_dim ~8-10 — low collapse, variable (reflects content diversity)
+
+#### Cosine Similarity Across All Layers
+![Trajectory cos_sim](../results/collapse_trajectory/plots/trajectory_cos_sim.png)
+
+Per-layer trajectories show consistent patterns:
+- **Layer 0**: All conditions moderately similar (cos_sim 0.6-0.8), least differentiation
+- **Layers 7-14**: Structured walk rises to ~0.75-0.80, separating from natural books (~0.35-0.40)
+- **Layer 27**: Maximum separation — structured walk ~0.95, natural books ~0.30-0.35
+
+#### Effective Dimension Across All Layers
+![Trajectory eff_dim](../results/collapse_trajectory/plots/trajectory_eff_dim.png)
+
+Effective dimension reveals a layer-depth pattern:
+- **Middle layers (L14)**: Natural books reaches highest eff_dim (~20-30), suggesting maximum representational diversity at intermediate processing
+- **Late layers (L21, L27)**: Both conditions compress, but structured walk compresses more aggressively (eff_dim ~5-6 vs ~8-10 for natural)
+
+#### Layer-wise Trajectories by Condition
+![Trajectory cos_sim by layer](../results/collapse_trajectory/plots/trajectory_cos_sim_by_layer.png)
+![Trajectory eff_dim by layer](../results/collapse_trajectory/plots/trajectory_eff_dim_by_layer.png)
+
+Layer ordering is consistent throughout: later layers show higher cos_sim (more collapse) for structured walk, while natural books shows an inverted-U in eff_dim (peaks at L14).
+
+### Key Finding: Collapse Is Immediate, Not Cumulative
+
+**All three conditions establish their collapse level within the first ~500 tokens and maintain it throughout all 20K tokens.** There is no progressive build-up — the sliding window's local content determines collapse, not the accumulated context history.
+
+This has important implications:
+1. **Collapse is a property of content, not context length**: The model doesn't "wear out" or progressively degrade. Each chunk of structured walk tokens produces the same level of geometric convergence.
+2. **The performance degradation at long context must come from KV cache saturation**, not from progressive geometric collapse. At 20K tokens, there are ~20K homogeneous KV entries drowning out ~50-100 question tokens in the attention mechanism.
+3. **The measurement window matters**: Our collapse metrics reflect local representation geometry, not accumulated state. This validates that the cos_sim ~0.95 we measured at the end of 20K tokens is representative, not an artifact of measurement timing.
+
+---
+
 ## Raw Data
 
 - Original results: `results/probing_collapse_performance/results.json`
 - Ignore results: `results/probing_collapse_ignore/results.json`
 - Chat template results: `results/probing_collapse_chat/results.json`
+- Trajectory results: `results/collapse_trajectory/trajectory_results.json`
 - Per-question results: `results/probing_collapse_performance/all_results.json`, `results/probing_collapse_ignore/all_results.json`, `results/probing_collapse_chat/all_results.json`
-- Plots: `results/probing_collapse_performance/plots/`
+- Plots: `results/probing_collapse_performance/plots/`, `results/collapse_trajectory/plots/`
 
 ## Notes
 
