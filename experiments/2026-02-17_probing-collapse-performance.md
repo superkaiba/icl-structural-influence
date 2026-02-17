@@ -180,16 +180,80 @@ The structured walk context fills the KV cache with representations that are geo
 
 An important nuance: the model shows some resilience at moderate collapse levels. At 500-1,000 tokens of structured walk context (cos_sim ~0.96, eff_dim ~8-10), accuracy remains >97%. The cliff comes at 10K-20K tokens. This suggests the attention mechanism can compensate for moderate KV cache homogeneity but breaks down at extreme levels.
 
+---
+
+## Follow-up: Can an Ignore Instruction Mitigate Collapse?
+
+**Date**: 2026-02-17
+
+### Motivation
+
+If collapse impairs knowledge retrieval by flooding the attention mechanism with homogeneous KV entries, can we mitigate this by explicitly telling the model to ignore the preceding context? This tests whether the degradation is a soft attention problem (fixable with instructions) or a hard representation problem (the KV cache is too corrupted to recover from).
+
+### Design
+
+After processing the collapse-inducing context into the KV cache, we inject 23 tokens:
+
+> "Ignore all of the preceding text. It is irrelevant filler. Answer the following question using only your own knowledge."
+
+The sequence becomes: `[context tokens] [ignore instruction] [question]`
+
+We test `structured_walk_ignore` and `repeated_token_ignore` at context lengths 2K, 5K, 10K, and 20K.
+
+### Results: Accuracy Comparison
+
+| Context Length | Structured Walk | + Ignore | Delta | Repeated Token | + Ignore | Delta |
+|---------------|-----------------|----------|-------|----------------|----------|-------|
+| 2,000 | 89.4% | 97.8% | **+8.4** | 63.3% | 73.3% | **+10.0** |
+| 5,000 | 87.8% | 93.3% | **+5.5** | 8.3% | 55.0% | **+46.7** |
+| 10,000 | 78.3% | 80.0% | **+1.7** | 1.7% | 3.3% | **+1.6** |
+| 20,000 | 10.0% | 2.2% | **-7.8** | 0.0% | 0.0% | **0.0** |
+
+### Figures
+
+#### Accuracy: Original vs Ignore Instruction
+![Accuracy Ignore Comparison](../results/probing_collapse_performance/plots/accuracy_ignore_comparison.png)
+
+Side-by-side comparison for structured walk (left) and repeated token (right). Dashed lines show the ignore-instruction variant. The ignore instruction provides a clear boost at moderate context lengths but cannot overcome extreme collapse at 20K.
+
+#### Accuracy Delta from Ignore Instruction
+![Accuracy Delta](../results/probing_collapse_performance/plots/accuracy_delta_ignore.png)
+
+Bar chart showing the accuracy change (in percentage points) from adding the ignore instruction. The most dramatic effect is repeated token at 5K tokens: +46.7 percentage points. At 20K, the effect is zero or slightly negative.
+
+#### Log-Probability: Original vs Ignore Instruction
+![Log-prob Ignore Comparison](../results/probing_collapse_performance/plots/logprob_ignore_comparison.png)
+
+Log-probability (continuous confidence measure) tells the same story. At moderate lengths, the ignore instruction partially restores confidence. At 20K, log-probs remain catastrophically low regardless.
+
+#### All Conditions Combined
+![All Conditions](../results/probing_collapse_performance/plots/all_conditions_accuracy.png)
+
+All 6 conditions on a single plot. Natural books (green) remains the gold standard at ~97% throughout. The ignore variants (dashed) sit between their original condition and natural books at moderate lengths, but converge to the same near-zero accuracy at 20K.
+
+### Interpretation
+
+The ignore instruction reveals two regimes:
+
+1. **Moderate collapse (2K-5K tokens)**: The instruction helps substantially. The model can attend to the instruction tokens and partially downweight the collapsed KV entries. The +46.7% boost for repeated_token at 5K is particularly striking -- suggesting that at this length, the model *could* answer correctly if it could just ignore the noise, and the instruction helps it do so.
+
+2. **Extreme collapse (10K-20K tokens)**: The instruction is ineffective or even counterproductive. At 20K structured walk tokens, accuracy drops from 10% to 2.2% with the ignore instruction. This suggests that at extreme lengths, the 23 instruction tokens are too few to overcome 20K homogeneous KV entries -- the attention mechanism is overwhelmed regardless of what the instruction says. The instruction may even "use up" some of the model's limited capacity to process non-collapsed tokens.
+
+This supports the **attention flooding** hypothesis: collapsed KV entries don't just add noise, they dominate the attention distribution because they all have similar keys. A short instruction can partially reweight attention at moderate saturation, but at extreme levels the sheer volume of identical KV entries makes the instruction invisible to the attention mechanism.
+
+---
+
 ## Raw Data
 
-- Aggregated results: `results/probing_collapse_performance/results.json`
-- Per-question results: `results/probing_collapse_performance/all_results.json`
-- Config: `results/probing_collapse_performance/config.json`
+- Original results: `results/probing_collapse_performance/results.json`
+- Ignore results: `results/probing_collapse_ignore/results.json`
+- Per-question results: `results/probing_collapse_performance/all_results.json`, `results/probing_collapse_ignore/all_results.json`
 - Plots: `results/probing_collapse_performance/plots/`
 
 ## Notes
 
 - Word knowledge (C) had the lowest screening pass rate (11/20) because the model often gave correct synonyms that didn't match the expected answer string. This is a limitation of exact-match evaluation.
-- The repeated_token condition uses a single token (e.g., token ID 0) repeated, creating maximally degenerate representations. This is an extreme case not seen in practice but useful as an upper bound on collapse effects.
-- Chat template formatting was used for all conditions (Qwen2.5-Instruct requires it), with context injected as a system message prefix.
+- The repeated_token condition uses a single token (e.g., token ID for " the") repeated, creating maximally degenerate representations. This is an extreme case not seen in practice but useful as an upper bound on collapse effects.
+- Chat template formatting was used for all conditions (Qwen2.5-Instruct requires it), with context injected as raw tokens in the KV cache before the chat-templated question.
 - KV cache deep-copy handles both `DynamicCache` (transformers >= 4.36) and legacy tuple-of-tuples formats.
+- The ignore instruction is 23 tokens long: `"\n\nIgnore all of the preceding text. It is irrelevant filler. Answer the following question using only your own knowledge.\n\n"`
