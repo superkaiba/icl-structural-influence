@@ -1,0 +1,48 @@
+{
+  "experiment": "misspellings",
+  "conditions": [
+    {
+      "name": "misspell_10pct",
+      "context_lengths": [
+        20000,
+        50000,
+        80000,
+        100000,
+        128000
+      ],
+      "n_trials": 3
+    },
+    {
+      "name": "misspell_25pct",
+      "context_lengths": [
+        20000,
+        50000,
+        80000,
+        100000,
+        128000
+      ],
+      "n_trials": 3
+    },
+    {
+      "name": "misspell_50pct",
+      "context_lengths": [
+        20000,
+        50000,
+        80000,
+        100000,
+        128000
+      ],
+      "n_trials": 3
+    }
+  ],
+  "layers": [
+    0,
+    7,
+    14,
+    21,
+    27
+  ],
+  "n_questions": 60,
+  "chunk_size": 512,
+  "timestamp": "20260218_204525"
+}

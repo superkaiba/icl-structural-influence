@@ -1,0 +1,64 @@
+{
+  "config": {
+    "experiment": "extended_length",
+    "conditions": [
+      {
+        "name": "natural_books_extended",
+        "context_lengths": [
+          50000,
+          80000,
+          100000,
+          128000
+        ],
+        "n_trials": 3
+      }
+    ],
+    "layers": [
+      0,
+      7,
+      14,
+      21,
+      27
+    ],
+    "n_questions": 60,
+    "chunk_size": 512,
+    "timestamp": "20260218_080436"
+  },
+  "aggregated": {
+    "natural_books_extended": {
+      "50000": {
+        "accuracy": 0.9611111111111111,
+        "mean_log_prob": -0.7372061666459948,
+        "std_log_prob": 1.6300601392346004,
+        "n_evaluations": 180,
+        "collapse_cos_sim_mean": 0.3512699405352275,
+        "collapse_eff_dim_mean": 14.496158281962076
+      },
+      "80000": {
+        "accuracy": 0.9444444444444444,
+        "mean_log_prob": -0.5520170692216467,
+        "std_log_prob": 1.2615747796662613,
+        "n_evaluations": 180,
+        "collapse_cos_sim_mean": 0.3755088249842326,
+        "collapse_eff_dim_mean": 12.996334075927734
+      },
+      "100000": {
+        "accuracy": 0.9555555555555556,
+        "mean_log_prob": -0.4799232216676076,
+        "std_log_prob": 1.0814626034461108,
+        "n_evaluations": 180,
+        "collapse_cos_sim_mean": 0.4191073377927144,
+        "collapse_eff_dim_mean": 12.525089581807455
+      },
+      "128000": {
+        "accuracy": 0.8333333333333334,
+        "mean_log_prob": -0.5615535334635665,
+        "std_log_prob": 0.9258383229670926,
+        "n_evaluations": 180,
+        "collapse_cos_sim_mean": 0.41121817628542584,
+        "collapse_eff_dim_mean": 13.068890253702799
+      }
+    }
+  },
+  "n_total_evaluations": 720
+}
