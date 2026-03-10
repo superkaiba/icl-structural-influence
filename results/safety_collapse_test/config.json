@@ -1,0 +1,37 @@
+{
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "layers": [
+    0,
+    7,
+    14,
+    21,
+    27
+  ],
+  "context_lengths": [
+    0,
+    2000
+  ],
+  "base_context_types": [
+    "no_context",
+    "structured_walk",
+    "repeated_token"
+  ],
+  "wrapping_modes": [
+    "raw"
+  ],
+  "n_trials": 1,
+  "n_prompts": 5,
+  "prompt_categories": {
+    "A_direct_harmful": 10,
+    "B_indirect_harmful": 10,
+    "C_borderline": 10,
+    "D_benign_control": 10,
+    "E_safety_knowledge": 10
+  },
+  "use_chat_template": true,
+  "chunk_size": 512,
+  "max_new_tokens": 100,
+  "timestamp": "20260310_184155",
+  "quick_test": true,
+  "n_baseline_refused": 2
+}
