@@ -851,10 +851,15 @@ def run_experiment(args):
         })
 
     # Create data sources
-    graph_config = DualInterpretationConfig(
-        vocab_size=15, clusters_per_interpretation=3, seed=42,
-    )
-    graph = DualInterpretationGraph(graph_config)
+    vocab_size = getattr(args, "vocab_size", 15)
+    if vocab_size != 15:
+        from src.data.dual_interpretation_graph import create_graph_with_vocab_size
+        graph = create_graph_with_vocab_size(vocab_size, seed=42)
+    else:
+        graph_config = DualInterpretationConfig(
+            vocab_size=15, clusters_per_interpretation=3, seed=42,
+        )
+        graph = DualInterpretationGraph(graph_config)
     nl_loader = NaturalLanguageLoader(
         model.tokenizer, NaturalLanguageConfig(seed=42),
     )
@@ -871,6 +876,7 @@ def run_experiment(args):
         "prompt_categories": {
             cat: len(ps) for cat, ps in SAFETY_PROMPTS.items()
         },
+        "vocab_size": vocab_size,
         "use_chat_template": use_chat_template,
         "chunk_size": args.chunk_size,
         "max_new_tokens": args.max_new_tokens,
@@ -1280,6 +1286,8 @@ def main():
         "--wrapping-modes", type=str, default=None,
         help="Comma-separated wrapping modes: raw,chat (overrides defaults)",
     )
+    parser.add_argument("--vocab-size", type=int, default=15,
+                        help="Vocab size for structured walk graph (default: 15)")
     parser.add_argument("--seed", type=int, default=42)
 
     args = parser.parse_args()
