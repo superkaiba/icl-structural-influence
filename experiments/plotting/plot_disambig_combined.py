@@ -98,7 +98,7 @@ def plot_combined(results, config, arm_label, output_path):
             ax_vel.plot(pos, mean_v, color=color, linewidth=lw,
                         linestyle=linestyle, alpha=alpha_base, label=vel_label)
             if not is_baseline and layer in [21, 27]:
-                ax_vel.fill_between(pos, mean_v - se_v, mean_v + se_v, color=color, alpha=0.06)
+                ax_vel.fill_between(pos, np.maximum(mean_v - se_v, 1e-1), mean_v + se_v, color=color, alpha=0.06)
 
             # Preference
             pos, mean_p, se_p = average_trajectories_raw(trials, ls, "h1_preference")
@@ -183,7 +183,7 @@ def plot_base_vs_instruct_combined(results_dir, output_path):
                 ax_vel.plot(pos, mean_v, color=color, linewidth=lw,
                             linestyle=linestyle, alpha=alpha_base, label=label)
                 if not is_baseline and layer in [21, 27]:
-                    ax_vel.fill_between(pos, mean_v - se_v, mean_v + se_v, color=color, alpha=0.06)
+                    ax_vel.fill_between(pos, np.maximum(mean_v - se_v, 1e-1), mean_v + se_v, color=color, alpha=0.06)
 
                 pos, mean_p, se_p = average_trajectories_raw(trials, ls, "h1_preference")
                 if len(pos) == 0:
@@ -237,9 +237,9 @@ def main():
     for arm, label in [("instruct", "Instruct (Qwen2.5-7B-Instruct)"),
                         ("base", "Base (Qwen2.5-7B)")]:
         results, config = load_arm(results_dir, arm)
-        plot_combined(results, config, label, output_dir / f"{arm}_combined.png")
+        plot_combined(results, config, label, output_dir / f"{arm}_combined_v2.png")
 
-    plot_base_vs_instruct_combined(results_dir, output_dir / "base_vs_instruct_combined.png")
+    plot_base_vs_instruct_combined(results_dir, output_dir / "base_vs_instruct_combined_v2.png")
 
     print(f"\nAll plots saved to {output_dir}")
 
