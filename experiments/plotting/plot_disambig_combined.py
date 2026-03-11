@@ -126,6 +126,7 @@ def plot_combined(results, config, arm_label, output_path):
         ax_vel.axvline(x=mean_pos, color=color, linestyle="--", linewidth=2, alpha=0.8, label=label)
         ax_pref.axvline(x=mean_pos, color=color, linestyle="--", linewidth=2, alpha=0.8, label=label)
 
+    ax_vel.set_yscale("log")
     ax_vel.set_ylabel("Velocity (L2 norm of residual stream change)", fontsize=12)
     ax_vel.set_title(f"Velocity Trajectory — {arm_label}", fontsize=14, fontweight="bold")
     ax_vel.legend(fontsize=9, ncol=2, loc="upper right")
@@ -204,6 +205,7 @@ def plot_base_vs_instruct_combined(results_dir, output_path):
             ax_vel.axvline(x=mean_pos, color=color, linestyle="--", linewidth=2, alpha=0.8, label=label)
             ax_pref.axvline(x=mean_pos, color=color, linestyle="--", linewidth=2, alpha=0.8, label=label)
 
+        ax_vel.set_yscale("log")
         ax_vel.set_title(f"Velocity — {arm_label}", fontsize=13, fontweight="bold")
         ax_vel.set_ylabel("Velocity" if col == 0 else "")
         ax_vel.legend(fontsize=8, ncol=2, loc="upper right")
