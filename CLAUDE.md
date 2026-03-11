@@ -225,6 +225,16 @@ git push
 
 Then provide link: `https://raw.githubusercontent.com/superkaiba/icl-structural-influence/main/results/[experiment]/plots/[plot].png`
 
+## Commit and Push Workflow
+
+After generating results, plots, or experiment summaries, **always commit and push** without being asked. The workflow is:
+1. `git add` the relevant files (scripts, results, plots, summaries)
+2. `git commit` with a descriptive message
+3. `git push origin main`
+4. Provide the GitHub link to the user
+
+This applies to: experiment scripts, result JSONs, plot PNGs, experiment summary markdown files, and example files.
+
 ## Implementation Guidelines
 
 **Test and Run**: When implementing new code, always:
