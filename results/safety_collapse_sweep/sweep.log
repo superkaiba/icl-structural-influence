@@ -1,0 +1,108 @@
+
+======================================================================
+Sweep started: 2026-03-11T07:56:59.174298
+Sweeps: ['model_size', 'architecture', 'model_gen', 'vocab_size', 'context_granularity'], Max tier: 4
+======================================================================
+
+[RUN] model_size/qwen25_0.5b: Qwen/Qwen2.5-0.5B-Instruct | lengths=0,5000,10000,15000,20000,25000,30000,40000,50000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-0.5B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,25000,30000,40000,50000 --n-trials 3 --output-dir results/safety_collapse_sweep/model_size/qwen25_0.5b
+[RUN] model_size/qwen25_3b: Qwen/Qwen2.5-3B-Instruct | lengths=0,5000,10000,15000,20000,25000,30000,40000,50000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-3B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,25000,30000,40000,50000 --n-trials 3 --output-dir results/safety_collapse_sweep/model_size/qwen25_3b
+[RUN] vocab_size/vocab50: Qwen/Qwen2.5-7B-Instruct | lengths=0,5000,10000,15000,20000,30000 | vocab=50
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-7B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,30000 --n-trials 3 --output-dir results/safety_collapse_sweep/vocab_size/vocab50 --vocab-size 50
+[RUN] vocab_size/vocab200: Qwen/Qwen2.5-7B-Instruct | lengths=0,5000,10000,15000,20000,30000 | vocab=200
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-7B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,30000 --n-trials 3 --output-dir results/safety_collapse_sweep/vocab_size/vocab200 --vocab-size 200
+[RUN] vocab_size/vocab1000: Qwen/Qwen2.5-7B-Instruct | lengths=0,5000,10000,15000,20000,30000 | vocab=1000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-7B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,30000 --n-trials 3 --output-dir results/safety_collapse_sweep/vocab_size/vocab1000 --vocab-size 1000
+[RUN] context_granularity/qwen25_7b_fillin: Qwen/Qwen2.5-7B-Instruct | lengths=15000,25000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-7B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 15000,25000 --n-trials 3 --output-dir results/safety_collapse_sweep/context_granularity/qwen25_7b_fillin
+[RUN] model_size/qwen25_14b: Qwen/Qwen2.5-14B-Instruct | lengths=0,5000,10000,15000,20000,25000,30000,40000,50000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-14B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,25000,30000,40000,50000 --n-trials 3 --output-dir results/safety_collapse_sweep/model_size/qwen25_14b
+[RUN] architecture/llama31_8b: meta-llama/Llama-3.1-8B-Instruct | lengths=0,5000,10000,15000,20000,25000,30000,40000,50000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model meta-llama/Llama-3.1-8B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,25000,30000,40000,50000 --n-trials 3 --output-dir results/safety_collapse_sweep/architecture/llama31_8b
+[RUN] model_size/qwen25_72b: Qwen/Qwen2.5-72B-Instruct | lengths=0,5000,10000,15000,20000,25000,30000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-72B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,25000,30000 --n-trials 3 --output-dir results/safety_collapse_sweep/model_size/qwen25_72b
+[RUN] architecture/llama33_70b: meta-llama/Llama-3.3-70B-Instruct | lengths=0,5000,10000,15000,20000,25000,30000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model meta-llama/Llama-3.3-70B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,25000,30000 --n-trials 3 --output-dir results/safety_collapse_sweep/architecture/llama33_70b
+[RUN] model_gen/qwen3_8b: Qwen/Qwen3-8B | lengths=0,5000,10000,15000,20000,25000,30000,40000,50000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen3-8B --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,25000,30000,40000,50000 --n-trials 3 --output-dir results/safety_collapse_sweep/model_gen/qwen3_8b
+
+Sweep complete: 11 succeeded, 0 failed, 0 skipped in 0.0h
+
+======================================================================
+Sweep started: 2026-03-11T07:57:18.648137
+Sweeps: ['model_size', 'architecture', 'model_gen', 'vocab_size', 'context_granularity'], Max tier: 1
+======================================================================
+
+[RUN] model_size/qwen25_0.5b: Qwen/Qwen2.5-0.5B-Instruct | lengths=0,5000,10000,15000,20000,25000,30000,40000,50000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-0.5B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,25000,30000,40000,50000 --n-trials 3 --output-dir results/safety_collapse_sweep/model_size/qwen25_0.5b
+[DONE] model_size/qwen25_0.5b: experiment complete in 0.9h
+[JUDGE] model_size/qwen25_0.5b: running judge...
+[JUDGE] model_size/qwen25_0.5b: judge complete
+[RUN] model_size/qwen25_3b: Qwen/Qwen2.5-3B-Instruct | lengths=0,5000,10000,15000,20000,25000,30000,40000,50000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-3B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,25000,30000,40000,50000 --n-trials 3 --output-dir results/safety_collapse_sweep/model_size/qwen25_3b
+[FAIL] model_size/qwen25_3b: experiment failed (exit 1) after 0.0h
+[RUN] vocab_size/vocab50: Qwen/Qwen2.5-7B-Instruct | lengths=0,5000,10000,15000,20000,30000 | vocab=50
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-7B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,30000 --n-trials 3 --output-dir results/safety_collapse_sweep/vocab_size/vocab50 --vocab-size 50
+
+======================================================================
+Sweep started: 2026-03-11T20:01:46.498311
+Sweeps: ['model_size', 'architecture', 'model_gen', 'vocab_size', 'context_granularity'], Max tier: 1
+======================================================================
+
+[RUN] model_size/qwen25_3b: Qwen/Qwen2.5-3B-Instruct | lengths=0,5000,10000,15000,20000,25000,30000,40000,50000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-3B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,25000,30000,40000,50000 --n-trials 3 --output-dir results/safety_collapse_sweep/model_size/qwen25_3b
+
+======================================================================
+Sweep started: 2026-03-11T20:05:05.781886
+Sweeps: ['model_size', 'architecture', 'model_gen', 'vocab_size', 'context_granularity'], Max tier: 4
+======================================================================
+
+[RUN] model_size/qwen25_3b: Qwen/Qwen2.5-3B-Instruct | lengths=0,5000,10000,15000,20000,25000,30000,40000,50000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-3B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,25000,30000,40000,50000 --n-trials 3 --output-dir results/safety_collapse_sweep/model_size/qwen25_3b
+[DONE] model_size/qwen25_3b: experiment complete in 1.8h
+[JUDGE] model_size/qwen25_3b: running judge...
+[JUDGE] model_size/qwen25_3b: judge complete
+[RUN] vocab_size/vocab50: Qwen/Qwen2.5-7B-Instruct | lengths=0,5000,10000,15000,20000,30000 | vocab=50
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-7B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,30000 --n-trials 3 --output-dir results/safety_collapse_sweep/vocab_size/vocab50 --vocab-size 50
+[DONE] vocab_size/vocab50: experiment complete in 1.0h
+[JUDGE] vocab_size/vocab50: running judge...
+[JUDGE] vocab_size/vocab50: judge complete
+[RUN] vocab_size/vocab200: Qwen/Qwen2.5-7B-Instruct | lengths=0,5000,10000,15000,20000,30000 | vocab=200
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-7B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,30000 --n-trials 3 --output-dir results/safety_collapse_sweep/vocab_size/vocab200 --vocab-size 200
+[DONE] vocab_size/vocab200: experiment complete in 1.0h
+[JUDGE] vocab_size/vocab200: running judge...
+[JUDGE] vocab_size/vocab200: judge complete
+[RUN] vocab_size/vocab1000: Qwen/Qwen2.5-7B-Instruct | lengths=0,5000,10000,15000,20000,30000 | vocab=1000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-7B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,30000 --n-trials 3 --output-dir results/safety_collapse_sweep/vocab_size/vocab1000 --vocab-size 1000
+[DONE] vocab_size/vocab1000: experiment complete in 1.0h
+[JUDGE] vocab_size/vocab1000: running judge...
+[JUDGE] vocab_size/vocab1000: judge complete
+[RUN] context_granularity/qwen25_7b_fillin: Qwen/Qwen2.5-7B-Instruct | lengths=15000,25000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-7B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 15000,25000 --n-trials 3 --output-dir results/safety_collapse_sweep/context_granularity/qwen25_7b_fillin
+[DONE] context_granularity/qwen25_7b_fillin: experiment complete in 0.5h
+[JUDGE] context_granularity/qwen25_7b_fillin: running judge...
+[JUDGE] context_granularity/qwen25_7b_fillin: judge complete
+[RUN] model_size/qwen25_14b: Qwen/Qwen2.5-14B-Instruct | lengths=0,5000,10000,15000,20000,25000,30000,40000,50000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-14B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,25000,30000,40000,50000 --n-trials 3 --output-dir results/safety_collapse_sweep/model_size/qwen25_14b
+[DONE] model_size/qwen25_14b: experiment complete in 4.1h
+[JUDGE] model_size/qwen25_14b: running judge...
+[JUDGE] model_size/qwen25_14b: judge complete
+[RUN] architecture/llama31_8b: meta-llama/Llama-3.1-8B-Instruct | lengths=0,5000,10000,15000,20000,25000,30000,40000,50000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model meta-llama/Llama-3.1-8B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,25000,30000,40000,50000 --n-trials 3 --output-dir results/safety_collapse_sweep/architecture/llama31_8b
+[DONE] architecture/llama31_8b: experiment complete in 2.2h
+[JUDGE] architecture/llama31_8b: running judge...
+[JUDGE] architecture/llama31_8b: judge complete
+[RUN] model_size/qwen25_72b: Qwen/Qwen2.5-72B-Instruct | lengths=0,5000,10000,15000,20000,25000,30000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen2.5-72B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,25000,30000 --n-trials 3 --output-dir results/safety_collapse_sweep/model_size/qwen25_72b
+[FAIL] model_size/qwen25_72b: experiment failed (exit 1) after 1.5h
+[RUN] architecture/llama33_70b: meta-llama/Llama-3.3-70B-Instruct | lengths=0,5000,10000,15000,20000,25000,30000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model meta-llama/Llama-3.3-70B-Instruct --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,25000,30000 --n-trials 3 --output-dir results/safety_collapse_sweep/architecture/llama33_70b
+[FAIL] architecture/llama33_70b: experiment failed (exit 1) after 0.0h
+[RUN] model_gen/qwen3_8b: Qwen/Qwen3-8B | lengths=0,5000,10000,15000,20000,25000,30000,40000,50000
+  CMD: /usr/bin/python -u experiments/core/run_safety_collapse_experiment.py --model Qwen/Qwen3-8B --context-types structured_walk,natural_books --wrapping-modes raw --context-lengths 0,5000,10000,15000,20000,25000,30000,40000,50000 --n-trials 3 --output-dir results/safety_collapse_sweep/model_gen/qwen3_8b
+[DONE] model_gen/qwen3_8b: experiment complete in 3.1h
+[JUDGE] model_gen/qwen3_8b: running judge...
+[JUDGE] model_gen/qwen3_8b: judge complete
+
+Sweep complete: 8 succeeded, 2 failed, 1 skipped in 17.4h
