@@ -1,0 +1,42 @@
+{
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "layers": [
+    0,
+    7,
+    14,
+    21,
+    27
+  ],
+  "context_lengths": [
+    40000,
+    50000,
+    60000,
+    70000,
+    80000,
+    90000,
+    100000
+  ],
+  "base_context_types": [
+    "structured_walk",
+    "natural_books"
+  ],
+  "wrapping_modes": [
+    "raw"
+  ],
+  "n_trials": 3,
+  "n_prompts": 50,
+  "prompt_categories": {
+    "A_direct_harmful": 10,
+    "B_indirect_harmful": 10,
+    "C_borderline": 10,
+    "D_benign_control": 10,
+    "E_safety_knowledge": 10
+  },
+  "vocab_size": 200,
+  "use_chat_template": true,
+  "chunk_size": 512,
+  "max_new_tokens": 100,
+  "timestamp": "20260313_055906",
+  "quick_test": false,
+  "n_baseline_refused": 18
+}

@@ -153,7 +153,7 @@ def is_judge_complete(output_dir: Path) -> bool:
     return (output_dir / "judge" / "judge_results.json").exists()
 
 
-def build_experiment_command(exp: dict, sweep_name: str) -> list[str]:
+def build_experiment_command(exp: dict, sweep_name: str, use_vllm: bool = False) -> list[str]:
     """Build the command to run a single experiment."""
     output_dir = get_output_dir(sweep_name, exp["short"])
 
@@ -171,6 +171,9 @@ def build_experiment_command(exp: dict, sweep_name: str) -> list[str]:
     if "vocab_size" in exp:
         cmd.extend(["--vocab-size", str(exp["vocab_size"])])
 
+    if use_vllm:
+        cmd.append("--use-vllm")
+
     return cmd
 
 
@@ -183,7 +186,7 @@ def build_judge_command(output_dir: Path) -> list[str]:
     ]
 
 
-def run_single_experiment(exp: dict, sweep_name: str, dry_run: bool, log_file) -> bool:
+def run_single_experiment(exp: dict, sweep_name: str, dry_run: bool, log_file, use_vllm: bool = False) -> bool:
     """Run a single experiment + judge. Returns True if successful."""
     output_dir = get_output_dir(sweep_name, exp["short"])
     label = f"{sweep_name}/{exp['short']}"
@@ -214,7 +217,7 @@ def run_single_experiment(exp: dict, sweep_name: str, dry_run: bool, log_file) -
         return True
 
     # Build and run experiment
-    cmd = build_experiment_command(exp, sweep_name)
+    cmd = build_experiment_command(exp, sweep_name, use_vllm=use_vllm)
     msg = f"[RUN] {label}: {exp['model']} | lengths={exp['lengths']}"
     if "vocab_size" in exp:
         msg += f" | vocab={exp['vocab_size']}"
@@ -284,6 +287,8 @@ def main():
         help="Only run experiments up to this tier (1=fast, 4=slow)",
     )
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--use-vllm", action="store_true",
+                        help="Use vLLM for batched safety evaluation (faster)")
     args = parser.parse_args()
 
     # Determine which sweeps to run
@@ -338,7 +343,7 @@ def main():
                 print(f"[SKIP] {sweep_name}/{exp['short']}: fully complete")
                 continue
 
-            success = run_single_experiment(exp, sweep_name, args.dry_run, log_file)
+            success = run_single_experiment(exp, sweep_name, args.dry_run, log_file, use_vllm=getattr(args, 'use_vllm', False))
             if success:
                 n_success += 1
             else:
