@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
-Publication-quality plots for 5 new context rot experiments.
+Publication-quality plots for context rot experiments with 3-band stacked bars.
+
+Uses LLM judge classifications (refusal / compliance / incoherent) instead of
+plain degradation rate.
 
 Generates:
-  1. Context Type Comparison (2x2 grid)
-  2. Jailbreak Amplification (side-by-side)
-  3. Persona Injection (grouped bar)
-  4. What Causes Collapse? (scatter: cos_sim vs degradation)
-  5. Collapse Metric by Context Type (cos_sim vs context length)
+  1. Context Type Comparison (2x2 grid of stacked bars)
+  2. Jailbreak Amplification (side-by-side stacked bars)
+  3. Persona Injection (grouped stacked bars)
+  4. Collapse vs Compliance (scatter: cos_sim vs genuine compliance rate)
+  5. Collapse Metric by Context Type (cos_sim line plot — unchanged)
 
 Usage:
     PYTHONPATH=. python experiments/plotting/plot_new_context_experiments.py
@@ -15,20 +18,19 @@ Usage:
 
 import json
 import os
-import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
 # ── Paths ────────────────────────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 NEW_CTX_DIR = PROJECT_ROOT / "results" / "new_context_types"
-ORIGINAL_DIR = PROJECT_ROOT / "results" / "safety_collapse" / "raw"
+ORIGINAL_DIR = PROJECT_ROOT / "results" / "safety_collapse"
 GRANULARITY_DIR = (
     PROJECT_ROOT / "results" / "safety_collapse_sweep"
     / "context_granularity" / "qwen25_7b_fillin" / "raw"
@@ -50,15 +52,19 @@ plt.rcParams.update({
     "axes.spines.right": False,
 })
 
-# Colorblind-friendly palette (Wong 2011 + extensions)
+# 3-band colors
+GREEN = "#2ecc71"   # refusal (safe)
+RED = "#e74c3c"     # compliance (unsafe)
+GRAY = "#95a5a6"    # incoherent
+
+# Per-context-type colors (used in scatter / line plots)
 COLORS = {
-    "structured_walk": "#D55E00",       # vermilion
-    "repeated_token": "#CC79A7",        # reddish purple
-    "natural_books": "#009E73",         # bluish green
-    "shuffled_books": "#56B4E9",        # sky blue
-    "code_python": "#0072B2",           # blue
-    "code_json": "#E69F00",             # orange
-    "template_small_vocab": "#F0E442",  # yellow (not used in these plots)
+    "structured_walk": "#D55E00",
+    "repeated_token": "#CC79A7",
+    "natural_books": "#009E73",
+    "shuffled_books": "#56B4E9",
+    "code_python": "#0072B2",
+    "code_json": "#E69F00",
 }
 
 MARKERS = {
@@ -82,6 +88,17 @@ LABELS = {
 
 # ── Data loading ─────────────────────────────────────────────────────────
 
+def load_judged_data(judge_path: Path) -> list[dict]:
+    """Load all_results_judged.json from a judge directory."""
+    if not judge_path.exists():
+        return []
+    with open(judge_path) as f:
+        data = json.load(f)
+    if isinstance(data, list):
+        return data
+    return []
+
+
 def load_raw_trials(raw_dir: Path) -> list[dict]:
     """Load all trial JSON files from a raw/ directory."""
     all_items = []
@@ -99,21 +116,56 @@ def load_raw_trials(raw_dir: Path) -> list[dict]:
     return all_items
 
 
-def compute_degradation_rate(items: list[dict]) -> float | None:
-    """Fraction of baseline-refused prompts that became safety_degraded."""
-    baseline_refused = [it for it in items if it.get("baseline_refused")]
-    if not baseline_refused:
-        return None
-    degraded = sum(1 for it in baseline_refused if it.get("safety_degraded"))
-    return degraded / len(baseline_refused)
+def classify_item(item: dict) -> str:
+    """Map judge_classification to one of: refusal, compliance, incoherent.
+
+    If judge data exists:
+      full_refusal, partial_refusal -> refusal
+      compliance -> compliance
+      incoherent, parse_error -> incoherent
+
+    Fallback (no judge): refused -> refusal, not refused + coherent -> compliance,
+    not refused + not coherent -> incoherent.
+    """
+    jc = item.get("judge_classification")
+    if jc:
+        if jc in ("full_refusal", "partial_refusal"):
+            return "refusal"
+        elif jc == "compliance":
+            return "compliance"
+        else:
+            return "incoherent"
+    # Fallback heuristic
+    if item.get("refused"):
+        return "refusal"
+    if item.get("coherent_response"):
+        return "compliance"
+    return "incoherent"
+
+
+def compute_band_proportions(items: list[dict]) -> dict:
+    """From baseline-refused items, compute proportions of each classification.
+
+    Returns {"refusal": float, "compliance": float, "incoherent": float, "n": int}.
+    """
+    bl_refused = [it for it in items if it.get("baseline_refused")]
+    n = len(bl_refused)
+    if n == 0:
+        return {"refusal": 0.0, "compliance": 0.0, "incoherent": 0.0, "n": 0}
+    counts = Counter(classify_item(it) for it in bl_refused)
+    return {
+        "refusal": counts.get("refusal", 0) / n,
+        "compliance": counts.get("compliance", 0) / n,
+        "incoherent": counts.get("incoherent", 0) / n,
+        "n": n,
+    }
 
 
 def compute_cos_sim_last_layer(items: list[dict]) -> float | None:
-    """Mean cos_sim at the last layer (27) across items."""
+    """Mean cos_sim at last layer (27) across items."""
     vals = []
     for it in items:
         cm = it.get("collapse_metrics", {})
-        # Try layer "27" (last for Qwen2.5-7B)
         layer_data = cm.get("27") or cm.get(27)
         if layer_data and layer_data.get("avg_cos_sim") is not None:
             vals.append(layer_data["avg_cos_sim"])
@@ -132,30 +184,89 @@ def group_by_condition_and_length(items: list[dict]) -> dict:
     return grouped
 
 
-def build_degradation_curve(grouped: dict, ctx_type: str) -> tuple[list, list, list]:
-    """Return (lengths, rates, stderrs) for a context type."""
+# ── Load all data ────────────────────────────────────────────────────────
+
+def load_all_data():
+    """Load judged data from all experiment directories."""
+    data = {}
+
+    # 1. Original safety collapse (structured_walk, natural_books, no injection)
+    original_items = load_judged_data(
+        ORIGINAL_DIR / "judge" / "all_results_judged.json"
+    )
+    # Filter to raw wrapping only
+    original_items = [it for it in original_items if it.get("wrapping_mode", "raw") == "raw"]
+    data["original"] = group_by_condition_and_length(original_items)
+
+    # 2. Repeated token
+    rt_items = load_judged_data(
+        NEW_CTX_DIR / "repeated_token" / "judge" / "all_results_judged.json"
+    )
+    if not rt_items:
+        rt_items = load_raw_trials(NEW_CTX_DIR / "repeated_token" / "raw")
+    data["repeated_token"] = group_by_condition_and_length(rt_items)
+
+    # 3. Shuffled books
+    sb_items = load_judged_data(
+        NEW_CTX_DIR / "shuffled_books" / "judge" / "all_results_judged.json"
+    )
+    if not sb_items:
+        sb_items = load_raw_trials(NEW_CTX_DIR / "shuffled_books" / "raw")
+    data["shuffled_books"] = group_by_condition_and_length(sb_items)
+
+    # 4. Jailbreak stacking
+    jb_items = load_judged_data(
+        NEW_CTX_DIR / "jailbreak_stacking" / "judge" / "all_results_judged.json"
+    )
+    if not jb_items:
+        jb_items = load_raw_trials(NEW_CTX_DIR / "jailbreak_stacking" / "raw")
+    data["jailbreak"] = group_by_condition_and_length(jb_items)
+
+    # 5. Persona injection (combine both dirs)
+    p_items = load_judged_data(
+        NEW_CTX_DIR / "persona_injection" / "judge" / "all_results_judged.json"
+    )
+    p_ext = load_judged_data(
+        NEW_CTX_DIR / "persona_injection_extended" / "judge" / "all_results_judged.json"
+    )
+    if not p_items:
+        p_items = load_raw_trials(NEW_CTX_DIR / "persona_injection" / "raw")
+    if not p_ext:
+        p_ext = load_raw_trials(NEW_CTX_DIR / "persona_injection_extended" / "raw")
+    data["persona"] = group_by_condition_and_length(p_items + p_ext)
+
+    # 6. Code language
+    code_items = load_judged_data(
+        NEW_CTX_DIR / "code_language" / "judge" / "all_results_judged.json"
+    )
+    if not code_items:
+        code_items = load_raw_trials(NEW_CTX_DIR / "code_language" / "raw")
+    data["code"] = group_by_condition_and_length(code_items)
+
+    # 7. Context granularity fill-in (extra structured_walk lengths, no judge)
+    if GRANULARITY_DIR.exists():
+        gran = load_raw_trials(GRANULARITY_DIR)
+        gran = [it for it in gran if it.get("wrapping_mode", "raw") == "raw"]
+        data["granularity"] = group_by_condition_and_length(gran)
+
+    return data
+
+
+def build_band_data(grouped: dict, ctx_type: str) -> tuple[list, list, list, list, list]:
+    """Return (lengths, refusal_fracs, compliance_fracs, incoherent_fracs, n_counts)
+    for a context type."""
     if ctx_type not in grouped:
-        return [], [], []
+        return [], [], [], [], []
     lengths = sorted(grouped[ctx_type].keys())
-    rates, stderrs = [], []
+    ref_fracs, comp_fracs, inc_fracs, ns = [], [], [], []
     for l in lengths:
         items = grouped[ctx_type][l]
-        # Group by trial to compute per-trial degradation, then mean+stderr
-        trials = defaultdict(list)
-        for it in items:
-            trials[it.get("trial_idx", 0)].append(it)
-        trial_rates = []
-        for t_items in trials.values():
-            r = compute_degradation_rate(t_items)
-            if r is not None:
-                trial_rates.append(r)
-        if trial_rates:
-            rates.append(np.mean(trial_rates))
-            stderrs.append(np.std(trial_rates) / max(np.sqrt(len(trial_rates)), 1))
-        else:
-            rates.append(np.nan)
-            stderrs.append(0)
-    return lengths, rates, stderrs
+        bp = compute_band_proportions(items)
+        ref_fracs.append(bp["refusal"])
+        comp_fracs.append(bp["compliance"])
+        inc_fracs.append(bp["incoherent"])
+        ns.append(bp["n"])
+    return lengths, ref_fracs, comp_fracs, inc_fracs, ns
 
 
 def build_cos_sim_curve(grouped: dict, ctx_type: str) -> tuple[list, list, list]:
@@ -183,156 +294,123 @@ def build_cos_sim_curve(grouped: dict, ctx_type: str) -> tuple[list, list, list]
     return lengths, means, stderrs
 
 
-# ── Load all data ────────────────────────────────────────────────────────
+# ── Stacked bar helpers ──────────────────────────────────────────────────
 
-def load_all_data():
-    """Load data from all experiment directories and return grouped dicts."""
-    data = {}
-
-    # 1. Original safety collapse (structured_walk, natural_books without injection)
-    original = load_raw_trials(ORIGINAL_DIR)
-    # Filter to raw wrapping only
-    original = [it for it in original if it.get("wrapping_mode", "raw") == "raw"]
-    data["original"] = group_by_condition_and_length(original)
-
-    # 2. Repeated token
-    repeated = load_raw_trials(NEW_CTX_DIR / "repeated_token" / "raw")
-    data["repeated_token"] = group_by_condition_and_length(repeated)
-
-    # 3. Shuffled books (includes natural_books control)
-    shuffled = load_raw_trials(NEW_CTX_DIR / "shuffled_books" / "raw")
-    data["shuffled_books"] = group_by_condition_and_length(shuffled)
-
-    # 4. Jailbreak stacking
-    jailbreak = load_raw_trials(NEW_CTX_DIR / "jailbreak_stacking" / "raw")
-    data["jailbreak"] = group_by_condition_and_length(jailbreak)
-
-    # 5. Persona injection (combine both dirs)
-    persona = load_raw_trials(NEW_CTX_DIR / "persona_injection" / "raw")
-    persona += load_raw_trials(NEW_CTX_DIR / "persona_injection_extended" / "raw")
-    data["persona"] = group_by_condition_and_length(persona)
-
-    # 6. Code language (includes natural_books control)
-    code = load_raw_trials(NEW_CTX_DIR / "code_language" / "raw")
-    data["code"] = group_by_condition_and_length(code)
-
-    # 7. Context granularity fill-in (extra structured_walk lengths)
-    if GRANULARITY_DIR.exists():
-        gran = load_raw_trials(GRANULARITY_DIR)
-        gran = [it for it in gran if it.get("wrapping_mode", "raw") == "raw"]
-        data["granularity"] = group_by_condition_and_length(gran)
-
-    return data
+def draw_stacked_bar(ax, x_pos, width, refusal, compliance, incoherent,
+                     edgecolor="white", linewidth=0.5):
+    """Draw a single 3-band stacked bar at position x_pos."""
+    ax.bar(x_pos, refusal, width, color=GREEN, edgecolor=edgecolor,
+           linewidth=linewidth, zorder=3)
+    ax.bar(x_pos, incoherent, width, bottom=refusal, color=GRAY,
+           edgecolor=edgecolor, linewidth=linewidth, zorder=3)
+    ax.bar(x_pos, compliance, width, bottom=refusal + incoherent, color=RED,
+           edgecolor=edgecolor, linewidth=linewidth, zorder=3)
 
 
-def _plot_line(ax, lengths, rates, stderrs, ctx_type, **kwargs):
-    """Plot a line with error band for a context type."""
-    color = COLORS.get(ctx_type, "#999999")
-    marker = MARKERS.get(ctx_type, "o")
-    label = LABELS.get(ctx_type, ctx_type)
-    label = kwargs.pop("label", label)
-    lw = kwargs.pop("lw", 2)
-    ms = kwargs.pop("ms", 6)
-
-    valid = [(l, r, s) for l, r, s in zip(lengths, rates, stderrs)
-             if not np.isnan(r)]
-    if not valid:
-        return
-    vl, vr, vs = zip(*valid)
-    vl, vr, vs = np.array(vl), np.array(vr), np.array(vs)
-
-    ax.plot(vl, vr, color=color, marker=marker, linewidth=lw, markersize=ms,
-            label=label, zorder=3, **kwargs)
-    if np.any(vs > 0):
-        ax.fill_between(vl, vr - vs, vr + vs, color=color, alpha=0.15, zorder=2)
+def band_legend_handles():
+    """Return legend handles for the 3-band stacked bars."""
+    return [
+        Patch(facecolor=GREEN, edgecolor="white", label="Refusal (safe)"),
+        Patch(facecolor=GRAY, edgecolor="white", label="Incoherent"),
+        Patch(facecolor=RED, edgecolor="white", label="Compliance (unsafe)"),
+    ]
 
 
 # ── Plot 1: Context Type Comparison (2x2) ───────────────────────────────
 
 def plot_context_type_comparison(data: dict):
-    """2x2 grid showing degradation rate vs context length for all types."""
+    """2x2 grid of stacked bar charts showing refusal/compliance/incoherent."""
     fig, axes = plt.subplots(2, 2, figsize=(14, 10), sharey=True)
 
-    # Build curves for all context types
-    # We need a unified set of curves. Merge original + new data.
-    # For structured_walk: use original (no injection)
-    # For natural_books: use original (no injection)
-    # For repeated_token: from repeated_token experiment
-    # For shuffled_books: from shuffled_books experiment
-    # For code_python, code_json: from code_language experiment
+    # Build band data for all context types
+    bands = {}
+    bands["structured_walk"] = build_band_data(data["original"], "structured_walk")
+    bands["natural_books"] = build_band_data(data["original"], "natural_books")
+    bands["repeated_token"] = build_band_data(data["repeated_token"], "repeated_token")
+    bands["shuffled_books"] = build_band_data(data["shuffled_books"], "shuffled_books")
+    bands["code_python"] = build_band_data(data["code"], "code_python")
+    bands["code_json"] = build_band_data(data["code"], "code_json")
 
-    curves = {}
+    def _draw_panel(ax, ctx_types, title):
+        """Draw grouped stacked bars for multiple context types."""
+        # Collect all unique lengths across the context types in this panel
+        all_lengths = sorted(set(
+            l for ct in ctx_types
+            for l in bands[ct][0]
+        ))
+        if not all_lengths:
+            ax.set_title(title, fontweight="bold")
+            return
 
-    # structured_walk from original
-    curves["structured_walk"] = build_degradation_curve(data["original"], "structured_walk")
+        n_types = len(ctx_types)
+        n_lengths = len(all_lengths)
+        group_width = 0.8
+        bar_width = group_width / max(n_types, 1)
 
-    # natural_books from original
-    curves["natural_books"] = build_degradation_curve(data["original"], "natural_books")
+        x_positions = np.arange(n_lengths)
 
-    # repeated_token
-    curves["repeated_token"] = build_degradation_curve(data["repeated_token"], "repeated_token")
+        for t_idx, ct in enumerate(ctx_types):
+            lengths, ref_f, comp_f, inc_f, ns = bands[ct]
+            length_map = {l: i for i, l in enumerate(lengths)}
 
-    # shuffled_books
-    curves["shuffled_books"] = build_degradation_curve(data["shuffled_books"], "shuffled_books")
+            for g_idx, gl in enumerate(all_lengths):
+                if gl not in length_map:
+                    continue
+                d_idx = length_map[gl]
+                x = x_positions[g_idx] - group_width / 2 + bar_width * (t_idx + 0.5)
+                draw_stacked_bar(ax, x, bar_width * 0.85,
+                                 ref_f[d_idx], comp_f[d_idx], inc_f[d_idx])
 
-    # code
-    curves["code_python"] = build_degradation_curve(data["code"], "code_python")
-    curves["code_json"] = build_degradation_curve(data["code"], "code_json")
+        ax.set_title(title, fontweight="bold")
+        ax.set_xticks(x_positions)
+        ax.set_xticklabels([f"{l/1000:.0f}K" if l >= 1000 else str(l)
+                            for l in all_lengths])
+        ax.set_xlabel("Context Length (tokens)")
+
+        # Add context type sub-labels if multiple types
+        if n_types > 1:
+            # Add a small text legend for bar groups
+            legend_handles = [
+                Patch(facecolor=COLORS.get(ct, "#999"), edgecolor="white",
+                      label=LABELS.get(ct, ct))
+                for ct in ctx_types
+            ]
+            # Put type legend in upper right
+            type_leg = ax.legend(handles=legend_handles, loc="upper right",
+                                 fontsize=8, title="Context type", title_fontsize=8)
+            ax.add_artist(type_leg)
 
     # Panel A: Collapse-inducing
-    ax = axes[0, 0]
-    ax.set_title("A. Collapse-Inducing Contexts", fontweight="bold")
-    for ct in ["structured_walk", "repeated_token"]:
-        if curves[ct][0]:
-            _plot_line(ax, *curves[ct], ct)
-    ax.axhline(0, color="gray", ls=":", alpha=0.4)
-    ax.legend(loc="upper left")
-    ax.set_ylabel("Degradation Rate")
-    ax.set_xlabel("Context Length (tokens)")
+    _draw_panel(axes[0, 0], ["structured_walk", "repeated_token"],
+                "A. Collapse-Inducing Contexts")
+    axes[0, 0].set_ylabel("Proportion")
 
     # Panel B: Natural & shuffled
-    ax = axes[0, 1]
-    ax.set_title("B. Natural & Shuffled Text", fontweight="bold")
-    for ct in ["natural_books", "shuffled_books"]:
-        if curves[ct][0]:
-            _plot_line(ax, *curves[ct], ct)
-    ax.axhline(0, color="gray", ls=":", alpha=0.4)
-    ax.legend(loc="upper left")
-    ax.set_xlabel("Context Length (tokens)")
+    _draw_panel(axes[0, 1], ["natural_books", "shuffled_books"],
+                "B. Natural & Shuffled Text")
 
     # Panel C: Code
-    ax = axes[1, 0]
-    ax.set_title("C. Code Contexts", fontweight="bold")
-    for ct in ["code_python", "code_json"]:
-        if curves[ct][0]:
-            _plot_line(ax, *curves[ct], ct)
-    ax.axhline(0, color="gray", ls=":", alpha=0.4)
-    ax.legend(loc="upper left")
-    ax.set_ylabel("Degradation Rate")
-    ax.set_xlabel("Context Length (tokens)")
+    _draw_panel(axes[1, 0], ["code_python", "code_json"],
+                "C. Code Contexts")
+    axes[1, 0].set_ylabel("Proportion")
 
-    # Panel D: All overlaid
-    ax = axes[1, 1]
-    ax.set_title("D. All Context Types", fontweight="bold")
-    for ct in ["structured_walk", "repeated_token", "natural_books",
-               "shuffled_books", "code_python", "code_json"]:
-        if curves[ct][0]:
-            _plot_line(ax, *curves[ct], ct)
-    ax.axhline(0, color="gray", ls=":", alpha=0.4)
-    ax.legend(loc="upper left", fontsize=8)
-    ax.set_xlabel("Context Length (tokens)")
+    # Panel D: All types overlaid (subset for readability)
+    _draw_panel(axes[1, 1],
+                ["structured_walk", "natural_books", "shuffled_books", "code_python"],
+                "D. All Context Types")
 
     for ax in axes.flat:
-        ax.set_ylim(-0.05, 1.05)
-        ax.grid(True, alpha=0.2)
-        # Format x-axis as K
-        ax.xaxis.set_major_formatter(
-            plt.FuncFormatter(lambda x, _: f"{x/1000:.0f}K" if x >= 1000 else f"{x:.0f}")
-        )
+        ax.set_ylim(0, 1.05)
+        ax.grid(True, axis="y", alpha=0.2)
 
-    fig.suptitle("Safety Degradation by Context Type (Qwen2.5-7B-Instruct)",
+    # Global legend for band colors
+    handles = band_legend_handles()
+    fig.legend(handles=handles, loc="lower center", ncol=3, fontsize=10,
+               bbox_to_anchor=(0.5, -0.02), frameon=True)
+
+    fig.suptitle("Safety Response Classification by Context Type (Qwen2.5-7B-Instruct)",
                  fontsize=14, fontweight="bold", y=1.01)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0.03, 1, 1])
     fig.savefig(OUTPUT_DIR / "context_type_comparison.png")
     plt.close(fig)
     print("  Saved: context_type_comparison.png")
@@ -341,55 +419,86 @@ def plot_context_type_comparison(data: dict):
 # ── Plot 2: Jailbreak Amplification ─────────────────────────────────────
 
 def plot_jailbreak_amplification(data: dict):
-    """Side-by-side: degradation WITH vs WITHOUT jailbreak for two context types."""
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5.5), sharey=True)
+    """Side-by-side panels: WITH vs WITHOUT jailbreak, stacked bars."""
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6), sharey=True)
 
     for ax_idx, ctx_type in enumerate(["structured_walk", "natural_books"]):
         ax = axes[ax_idx]
-        color = COLORS[ctx_type]
 
         # Without jailbreak (from original)
-        lengths_no, rates_no, stds_no = build_degradation_curve(
+        lengths_no, ref_no, comp_no, inc_no, _ = build_band_data(
             data["original"], ctx_type
         )
         # With jailbreak
-        lengths_jb, rates_jb, stds_jb = build_degradation_curve(
+        lengths_jb, ref_jb, comp_jb, inc_jb, _ = build_band_data(
             data["jailbreak"], ctx_type
         )
 
-        if lengths_no:
-            vl = np.array(lengths_no)
-            vr = np.array(rates_no)
-            vs = np.array(stds_no)
-            ax.plot(vl, vr, color=color, marker="o", linewidth=2, markersize=7,
-                    label=f"{LABELS[ctx_type]} only", alpha=0.8, ls="--")
-            if np.any(vs > 0):
-                ax.fill_between(vl, vr - vs, vr + vs, color=color, alpha=0.1)
+        # Combine all lengths present in both
+        all_lengths = sorted(set(lengths_no) | set(lengths_jb))
+        # Filter to lengths where at least one source has data
+        # Build lookup maps
+        no_map = {l: (r, c, i) for l, r, c, i in
+                  zip(lengths_no, ref_no, comp_no, inc_no)}
+        jb_map = {l: (r, c, i) for l, r, c, i in
+                  zip(lengths_jb, ref_jb, comp_jb, inc_jb)}
 
-        if lengths_jb:
-            vl = np.array(lengths_jb)
-            vr = np.array(rates_jb)
-            vs = np.array(stds_jb)
-            ax.plot(vl, vr, color=color, marker="s", linewidth=2.5, markersize=7,
-                    label=f"{LABELS[ctx_type]} + jailbreak", alpha=1.0, ls="-")
-            if np.any(vs > 0):
-                ax.fill_between(vl, vr - vs, vr + vs, color=color, alpha=0.15)
+        # Only show lengths present in jailbreak data (the focus)
+        show_lengths = sorted(set(lengths_jb))
+        if not show_lengths:
+            show_lengths = all_lengths
 
-        ax.axhline(0, color="gray", ls=":", alpha=0.4)
+        n_lengths = len(show_lengths)
+        x_positions = np.arange(n_lengths)
+        bar_width = 0.35
+
+        for g_idx, gl in enumerate(show_lengths):
+            # No jailbreak bar
+            if gl in no_map:
+                r, c, i = no_map[gl]
+                draw_stacked_bar(ax, x_positions[g_idx] - bar_width / 2 - 0.02,
+                                 bar_width, r, c, i)
+            # With jailbreak bar
+            if gl in jb_map:
+                r, c, i = jb_map[gl]
+                draw_stacked_bar(ax, x_positions[g_idx] + bar_width / 2 + 0.02,
+                                 bar_width, r, c, i)
+
         ax.set_title(LABELS[ctx_type], fontweight="bold", fontsize=12)
+        ax.set_xticks(x_positions)
+        ax.set_xticklabels([f"{l/1000:.0f}K" if l >= 1000 else str(l)
+                            for l in show_lengths])
         ax.set_xlabel("Context Length (tokens)")
-        ax.legend(loc="upper left", fontsize=9)
-        ax.grid(True, alpha=0.2)
-        ax.set_ylim(-0.05, 1.05)
-        ax.xaxis.set_major_formatter(
-            plt.FuncFormatter(lambda x, _: f"{x/1000:.0f}K" if x >= 1000 else f"{x:.0f}")
-        )
+        ax.set_ylim(0, 1.05)
+        ax.grid(True, axis="y", alpha=0.2)
 
-    axes[0].set_ylabel("Degradation Rate")
+        # Condition legend
+        cond_handles = [
+            Patch(facecolor="#CCCCCC", edgecolor="black", linewidth=0.8,
+                  label="No jailbreak"),
+            Patch(facecolor="#666666", edgecolor="black", linewidth=0.8,
+                  label="With jailbreak"),
+        ]
+        ax.legend(handles=cond_handles, loc="upper left", fontsize=9)
 
-    fig.suptitle("Collapse Amplifies Simple Jailbreaks",
+    axes[0].set_ylabel("Proportion")
+
+    # Band legend
+    handles = band_legend_handles()
+    fig.legend(handles=handles, loc="lower center", ncol=3, fontsize=10,
+               bbox_to_anchor=(0.5, -0.02), frameon=True)
+
+    # Add bar labels
+    fig.text(0.25, 0.92, "Left bar = no jailbreak  |  Right bar = + jailbreak",
+             ha="center", fontsize=9, style="italic", color="#555555",
+             transform=fig.transFigure)
+    fig.text(0.75, 0.92, "Left bar = no jailbreak  |  Right bar = + jailbreak",
+             ha="center", fontsize=9, style="italic", color="#555555",
+             transform=fig.transFigure)
+
+    fig.suptitle("Jailbreak Amplification of Context Rot",
                  fontsize=14, fontweight="bold", y=1.01)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     fig.savefig(OUTPUT_DIR / "jailbreak_amplification.png")
     plt.close(fig)
     print("  Saved: jailbreak_amplification.png")
@@ -398,92 +507,88 @@ def plot_jailbreak_amplification(data: dict):
 # ── Plot 3: Persona Injection ───────────────────────────────────────────
 
 def plot_persona_injection(data: dict):
-    """Grouped bar: degradation WITH vs WITHOUT persona injection at 20K-50K."""
-    # Persona data
-    lengths_p, rates_p, stds_p = build_degradation_curve(
+    """Grouped stacked bars: WITH vs WITHOUT persona injection at 20K-50K."""
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Persona data (structured_walk)
+    lengths_p, ref_p, comp_p, inc_p, _ = build_band_data(
         data["persona"], "structured_walk"
     )
+    p_map = {l: (r, c, i) for l, r, c, i in
+             zip(lengths_p, ref_p, comp_p, inc_p)}
 
-    # Without persona: combine original + granularity data for matching lengths
-    # Merge original and granularity structured_walk data
+    # No persona: from original structured_walk + granularity
     merged = defaultdict(list)
     for src_key in ["original", "granularity"]:
         if src_key in data and "structured_walk" in data[src_key]:
             for l, items in data[src_key]["structured_walk"].items():
                 merged[l].extend(items)
     merged_grouped = {"structured_walk": merged}
-    lengths_no, rates_no, stds_no = build_degradation_curve(
+    lengths_no, ref_no, comp_no, inc_no, _ = build_band_data(
         merged_grouped, "structured_walk"
     )
+    no_map = {l: (r, c, i) for l, r, c, i in
+              zip(lengths_no, ref_no, comp_no, inc_no)}
 
-    # Keep only lengths present in persona data
-    persona_lengths = set(lengths_p)
-    idx_no = [i for i, l in enumerate(lengths_no) if l in persona_lengths]
-    lengths_no_f = [lengths_no[i] for i in idx_no]
-    rates_no_f = [rates_no[i] for i in idx_no]
-    stds_no_f = [stds_no[i] for i in idx_no]
+    # Target lengths: union of persona lengths
+    all_lengths = sorted(set(lengths_p))
 
-    # Ensure we have data for all persona lengths
-    # Build lookup for no-persona rates
-    no_persona_map = {l: (r, s) for l, r, s in zip(lengths_no_f, rates_no_f, stds_no_f)}
-    persona_map = {l: (r, s) for l, r, s in zip(lengths_p, rates_p, stds_p)}
+    n_lengths = len(all_lengths)
+    x_positions = np.arange(n_lengths)
+    bar_width = 0.35
 
-    all_lengths = sorted(persona_lengths)
-
-    fig, ax = plt.subplots(figsize=(10, 6))
-
-    x = np.arange(len(all_lengths))
-    width = 0.35
-
-    # No persona bars
-    no_rates = [no_persona_map.get(l, (np.nan, 0))[0] for l in all_lengths]
-    no_stds = [no_persona_map.get(l, (0, 0))[1] for l in all_lengths]
-    p_rates = [persona_map.get(l, (np.nan, 0))[0] for l in all_lengths]
-    p_stds = [persona_map.get(l, (0, 0))[1] for l in all_lengths]
-
-    bars1 = ax.bar(x - width/2, no_rates, width,
-                   yerr=no_stds, capsize=5,
-                   color=COLORS["structured_walk"], alpha=0.6,
-                   label="Structured walk only", edgecolor="white", linewidth=0.5)
-    bars2 = ax.bar(x + width/2, p_rates, width,
-                   yerr=p_stds, capsize=5,
-                   color="#7B2D8E", alpha=0.85,
-                   label="Structured walk + persona injection",
-                   edgecolor="white", linewidth=0.5)
-
-    # Add value labels on bars
-    for bar_group in [bars1, bars2]:
-        for bar in bar_group:
-            h = bar.get_height()
-            if not np.isnan(h):
-                ax.text(bar.get_x() + bar.get_width()/2, h + 0.02,
-                        f"{h:.0%}", ha="center", va="bottom", fontsize=9)
+    for g_idx, gl in enumerate(all_lengths):
+        # No persona bar
+        if gl in no_map:
+            r, c, i = no_map[gl]
+            draw_stacked_bar(ax, x_positions[g_idx] - bar_width / 2 - 0.02,
+                             bar_width, r, c, i)
+        # With persona bar
+        if gl in p_map:
+            r, c, i = p_map[gl]
+            draw_stacked_bar(ax, x_positions[g_idx] + bar_width / 2 + 0.02,
+                             bar_width, r, c, i)
 
     ax.set_xlabel("Context Length (tokens)")
-    ax.set_ylabel("Degradation Rate")
-    ax.set_title("Persona Injection After Collapse (Structured Walk)",
+    ax.set_ylabel("Proportion")
+    ax.set_title("Persona Injection After Structured Walk Context",
                  fontweight="bold", fontsize=13)
-    ax.set_xticks(x)
+    ax.set_xticks(x_positions)
     ax.set_xticklabels([f"{l/1000:.0f}K" for l in all_lengths])
-    ax.set_ylim(0, 1.15)
-    ax.legend(fontsize=10)
+    ax.set_ylim(0, 1.05)
     ax.grid(True, axis="y", alpha=0.2)
-    ax.axhline(0, color="gray", ls=":", alpha=0.4)
 
-    plt.tight_layout()
+    # Condition legend
+    cond_handles = [
+        Patch(facecolor="#CCCCCC", edgecolor="black", linewidth=0.8,
+              label="Structured walk only"),
+        Patch(facecolor="#666666", edgecolor="black", linewidth=0.8,
+              label="+ persona injection"),
+    ]
+    ax.legend(handles=cond_handles, loc="upper right", fontsize=10)
+
+    # Add text annotation
+    ax.text(0.02, 0.95,
+            "Left bar = no injection  |  Right bar = + persona injection",
+            transform=ax.transAxes, fontsize=9, style="italic", color="#555555",
+            verticalalignment="top")
+
+    # Band legend
+    handles = band_legend_handles()
+    fig.legend(handles=handles, loc="lower center", ncol=3, fontsize=10,
+               bbox_to_anchor=(0.5, -0.02), frameon=True)
+
+    plt.tight_layout(rect=[0, 0.03, 1, 1])
     fig.savefig(OUTPUT_DIR / "persona_injection.png")
     plt.close(fig)
     print("  Saved: persona_injection.png")
 
 
-# ── Plot 4: What Causes Collapse? (cos_sim vs degradation) ──────────────
+# ── Plot 4: Collapse vs Compliance (scatter) ────────────────────────────
 
 def plot_collapse_vs_degradation(data: dict):
-    """Scatter: cos_sim (last layer) vs degradation rate, colored by type."""
+    """Scatter: cos_sim (last layer) vs genuine compliance rate (red fraction)."""
     fig, ax = plt.subplots(figsize=(10, 7))
-
-    # Collect all (ctx_type, length) -> (cos_sim, degradation) points
-    points = []  # (ctx_type, length, cos_sim, degradation)
 
     # Sources for each context type
     sources = {
@@ -495,48 +600,55 @@ def plot_collapse_vs_degradation(data: dict):
         "code_json": [("code", "code_json")],
     }
 
+    points = []  # (ctx_type, length, cos_sim, compliance_rate)
+
     for ctx_type, source_list in sources.items():
         for src_key, src_type in source_list:
             if src_key not in data or src_type not in data[src_key]:
                 continue
             for length, items in data[src_key][src_type].items():
                 cs = compute_cos_sim_last_layer(items)
-                dr = compute_degradation_rate(items)
-                if cs is not None and dr is not None:
-                    points.append((ctx_type, length, cs, dr))
+                bp = compute_band_proportions(items)
+                if cs is not None and bp["n"] > 0:
+                    points.append((ctx_type, length, cs, bp["compliance"]))
 
-    # Plot
+    # Plot by context type
     for ctx_type in ["structured_walk", "repeated_token", "natural_books",
                      "shuffled_books", "code_python", "code_json"]:
-        pts = [(l, cs, dr) for ct, l, cs, dr in points if ct == ctx_type]
+        pts = [(l, cs, cr) for ct, l, cs, cr in points if ct == ctx_type]
         if not pts:
             continue
-        lengths, cos_sims, deg_rates = zip(*pts)
+        lengths, cos_sims, comp_rates = zip(*pts)
         color = COLORS.get(ctx_type, "#999999")
         marker = MARKERS.get(ctx_type, "o")
         label = LABELS.get(ctx_type, ctx_type)
-        ax.scatter(cos_sims, deg_rates, c=color, marker=marker, s=80,
+        ax.scatter(cos_sims, comp_rates, c=color, marker=marker, s=80,
                    label=label, edgecolors="white", linewidths=0.5, zorder=3)
 
-    # Annotate a few key points
-    for ctx_type, length, cs, dr in points:
-        # Annotate extremes
-        if (ctx_type == "repeated_token" and length == max(l for ct, l, _, _ in points if ct == "repeated_token")) or \
-           (ctx_type == "structured_walk" and dr == max(d for ct, _, _, d in points if ct == "structured_walk")) or \
-           (ctx_type == "natural_books" and length == max(l for ct, l, _, _ in points if ct == "natural_books")):
+    # Annotate extremes
+    for ctx_type, length, cs, cr in points:
+        annotate = False
+        pts_of_type = [(l, c, r) for ct, l, c, r in points if ct == ctx_type]
+        max_len = max(l for l, _, _ in pts_of_type)
+        max_cr = max(r for _, _, r in pts_of_type)
+        if length == max_len and cr > 0.01:
+            annotate = True
+        if cr == max_cr and cr > 0.05:
+            annotate = True
+        if annotate:
             ax.annotate(f"{ctx_type.replace('_', ' ')}\n{length/1000:.0f}K",
-                        (cs, dr), fontsize=7, alpha=0.7,
+                        (cs, cr), fontsize=7, alpha=0.7,
                         xytext=(8, 8), textcoords="offset points",
                         arrowprops=dict(arrowstyle="-", alpha=0.3, lw=0.5))
 
     ax.set_xlabel("Cosine Similarity (Layer 27, Last Layer)")
-    ax.set_ylabel("Degradation Rate")
-    ax.set_title("Geometric Collapse Predicts Safety Degradation",
+    ax.set_ylabel("Genuine Compliance Rate (Unsafe)")
+    ax.set_title("Geometric Collapse vs Actual Safety Risk",
                  fontweight="bold", fontsize=13)
     ax.legend(loc="upper left", fontsize=9)
     ax.grid(True, alpha=0.2)
     ax.set_xlim(left=None, right=1.02)
-    ax.set_ylim(-0.05, 1.05)
+    ax.set_ylim(bottom=-0.02)
 
     plt.tight_layout()
     fig.savefig(OUTPUT_DIR / "collapse_vs_degradation.png")
@@ -544,13 +656,12 @@ def plot_collapse_vs_degradation(data: dict):
     print("  Saved: collapse_vs_degradation.png")
 
 
-# ── Plot 5: Collapse Metric by Context Type ─────────────────────────────
+# ── Plot 5: Collapse Metric by Context Type (unchanged) ─────────────────
 
 def plot_cos_sim_by_context(data: dict):
     """cos_sim (last layer) vs context length, one line per type."""
     fig, ax = plt.subplots(figsize=(11, 6))
 
-    # Build curves
     curves = {}
     curves["structured_walk"] = build_cos_sim_curve(data["original"], "structured_walk")
     curves["natural_books"] = build_cos_sim_curve(data["original"], "natural_books")
@@ -609,7 +720,10 @@ def main():
         for ctx_type, by_len in grouped.items():
             total = sum(len(v) for v in by_len.values())
             lengths = sorted(by_len.keys())
-            print(f"  [{key}] {ctx_type}: {total} items, "
+            # Count baseline_refused
+            bl = sum(1 for items in by_len.values()
+                     for it in items if it.get("baseline_refused"))
+            print(f"  [{key}] {ctx_type}: {total} items ({bl} baseline_refused), "
                   f"lengths={[int(l) for l in lengths]}")
 
     print(f"\nGenerating plots -> {OUTPUT_DIR}/")
@@ -623,7 +737,7 @@ def main():
     print("\n3. Persona Injection")
     plot_persona_injection(data)
 
-    print("\n4. Collapse vs Degradation (scatter)")
+    print("\n4. Collapse vs Compliance (scatter)")
     plot_collapse_vs_degradation(data)
 
     print("\n5. Collapse Metric by Context Type")
