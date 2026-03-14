@@ -319,102 +319,56 @@ def band_legend_handles():
 # ── Plot 1: Context Type Comparison (2x2) ───────────────────────────────
 
 def plot_context_type_comparison(data: dict):
-    """2x2 grid of stacked bar charts showing refusal/compliance/incoherent."""
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10), sharey=True)
-
+    """One row per context type — each row is a simple stacked bar chart."""
     # Build band data for all context types
     bands = {}
     bands["structured_walk"] = build_band_data(data["original"], "structured_walk")
-    bands["natural_books"] = build_band_data(data["original"], "natural_books")
     bands["repeated_token"] = build_band_data(data["repeated_token"], "repeated_token")
+    bands["natural_books"] = build_band_data(data["original"], "natural_books")
     bands["shuffled_books"] = build_band_data(data["shuffled_books"], "shuffled_books")
     bands["code_python"] = build_band_data(data["code"], "code_python")
     bands["code_json"] = build_band_data(data["code"], "code_json")
 
-    # Hatching patterns for distinguishing context types within a panel
-    TYPE_HATCHES = ["", "//", "\\\\", "xx"]
+    ctx_types = ["structured_walk", "repeated_token", "natural_books",
+                 "shuffled_books", "code_python", "code_json"]
+    n_rows = len(ctx_types)
 
-    def _draw_panel(ax, ctx_types, title):
-        """Draw grouped stacked bars for multiple context types."""
-        # Collect all unique lengths across the context types in this panel
-        all_lengths = sorted(set(
-            l for ct in ctx_types
-            for l in bands[ct][0]
-        ))
-        if not all_lengths:
-            ax.set_title(title, fontweight="bold")
-            return
+    fig, axes = plt.subplots(n_rows, 1, figsize=(12, 2.5 * n_rows), sharey=True)
 
-        n_types = len(ctx_types)
-        n_lengths = len(all_lengths)
-        group_width = 0.8
-        bar_width = group_width / max(n_types, 1)
+    for row_idx, ct in enumerate(ctx_types):
+        ax = axes[row_idx]
+        lengths, ref_f, comp_f, inc_f, ns = bands[ct]
 
-        x_positions = np.arange(n_lengths)
+        if not lengths:
+            ax.set_title(LABELS[ct], fontweight="bold", loc="left")
+            continue
 
-        for t_idx, ct in enumerate(ctx_types):
-            lengths, ref_f, comp_f, inc_f, ns = bands[ct]
-            length_map = {l: i for i, l in enumerate(lengths)}
-            hatch = TYPE_HATCHES[t_idx % len(TYPE_HATCHES)] if n_types > 1 else None
+        x_positions = np.arange(len(lengths))
+        bar_width = 0.6
 
-            for g_idx, gl in enumerate(all_lengths):
-                if gl not in length_map:
-                    continue
-                d_idx = length_map[gl]
-                x = x_positions[g_idx] - group_width / 2 + bar_width * (t_idx + 0.5)
-                draw_stacked_bar(ax, x, bar_width * 0.85,
-                                 ref_f[d_idx], comp_f[d_idx], inc_f[d_idx],
-                                 hatch=hatch)
+        for i in range(len(lengths)):
+            draw_stacked_bar(ax, x_positions[i], bar_width,
+                             ref_f[i], comp_f[i], inc_f[i])
 
-        ax.set_title(title, fontweight="bold")
+        ax.set_title(LABELS[ct], fontweight="bold", loc="left", fontsize=12,
+                     color=COLORS.get(ct, "black"))
         ax.set_xticks(x_positions)
         ax.set_xticklabels([f"{l/1000:.0f}K" if l >= 1000 else str(l)
-                            for l in all_lengths])
-        ax.set_xlabel("Context Length (tokens)")
-
-        # Add context type sub-labels if multiple types
-        if n_types > 1:
-            legend_handles = [
-                Patch(facecolor="white", edgecolor="black", linewidth=0.8,
-                      hatch=TYPE_HATCHES[i % len(TYPE_HATCHES)],
-                      label=LABELS.get(ct, ct))
-                for i, ct in enumerate(ctx_types)
-            ]
-            type_leg = ax.legend(handles=legend_handles, loc="upper right",
-                                 fontsize=8, title="Context type", title_fontsize=8)
-            ax.add_artist(type_leg)
-
-    # Panel A: Collapse-inducing
-    _draw_panel(axes[0, 0], ["structured_walk", "repeated_token"],
-                "A. Collapse-Inducing Contexts")
-    axes[0, 0].set_ylabel("Proportion")
-
-    # Panel B: Natural & shuffled
-    _draw_panel(axes[0, 1], ["natural_books", "shuffled_books"],
-                "B. Natural & Shuffled Text")
-
-    # Panel C: Code
-    _draw_panel(axes[1, 0], ["code_python", "code_json"],
-                "C. Code Contexts")
-    axes[1, 0].set_ylabel("Proportion")
-
-    # Panel D: All types overlaid (subset for readability)
-    _draw_panel(axes[1, 1],
-                ["structured_walk", "natural_books", "shuffled_books", "code_python"],
-                "D. All Context Types")
-
-    for ax in axes.flat:
+                            for l in lengths])
         ax.set_ylim(0, 1.05)
         ax.grid(True, axis="y", alpha=0.2)
+        if row_idx == n_rows - 1:
+            ax.set_xlabel("Context Length (tokens)")
+        ax.set_ylabel("Proportion")
 
     # Global legend for band colors
     handles = band_legend_handles()
-    fig.legend(handles=handles, loc="lower center", ncol=3, fontsize=10,
+    fig.legend(handles=handles, loc="lower center", ncol=3, fontsize=11,
                bbox_to_anchor=(0.5, -0.02), frameon=True)
 
     fig.suptitle("Safety Response Classification by Context Type (Qwen2.5-7B-Instruct)",
                  fontsize=14, fontweight="bold", y=1.01)
-    plt.tight_layout(rect=[0, 0.03, 1, 1])
+    plt.tight_layout(rect=[0, 0.03, 1, 0.99])
     fig.savefig(OUTPUT_DIR / "context_type_comparison.png")
     plt.close(fig)
     print("  Saved: context_type_comparison.png")
