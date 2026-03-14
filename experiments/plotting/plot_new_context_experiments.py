@@ -297,14 +297,14 @@ def build_cos_sim_curve(grouped: dict, ctx_type: str) -> tuple[list, list, list]
 # ── Stacked bar helpers ──────────────────────────────────────────────────
 
 def draw_stacked_bar(ax, x_pos, width, refusal, compliance, incoherent,
-                     edgecolor="white", linewidth=0.5):
+                     edgecolor="white", linewidth=0.5, hatch=None):
     """Draw a single 3-band stacked bar at position x_pos."""
     ax.bar(x_pos, refusal, width, color=GREEN, edgecolor=edgecolor,
-           linewidth=linewidth, zorder=3)
+           linewidth=linewidth, hatch=hatch, zorder=3)
     ax.bar(x_pos, incoherent, width, bottom=refusal, color=GRAY,
-           edgecolor=edgecolor, linewidth=linewidth, zorder=3)
+           edgecolor=edgecolor, linewidth=linewidth, hatch=hatch, zorder=3)
     ax.bar(x_pos, compliance, width, bottom=refusal + incoherent, color=RED,
-           edgecolor=edgecolor, linewidth=linewidth, zorder=3)
+           edgecolor=edgecolor, linewidth=linewidth, hatch=hatch, zorder=3)
 
 
 def band_legend_handles():
@@ -331,6 +331,9 @@ def plot_context_type_comparison(data: dict):
     bands["code_python"] = build_band_data(data["code"], "code_python")
     bands["code_json"] = build_band_data(data["code"], "code_json")
 
+    # Hatching patterns for distinguishing context types within a panel
+    TYPE_HATCHES = ["", "//", "\\\\", "xx"]
+
     def _draw_panel(ax, ctx_types, title):
         """Draw grouped stacked bars for multiple context types."""
         # Collect all unique lengths across the context types in this panel
@@ -352,6 +355,7 @@ def plot_context_type_comparison(data: dict):
         for t_idx, ct in enumerate(ctx_types):
             lengths, ref_f, comp_f, inc_f, ns = bands[ct]
             length_map = {l: i for i, l in enumerate(lengths)}
+            hatch = TYPE_HATCHES[t_idx % len(TYPE_HATCHES)] if n_types > 1 else None
 
             for g_idx, gl in enumerate(all_lengths):
                 if gl not in length_map:
@@ -359,7 +363,8 @@ def plot_context_type_comparison(data: dict):
                 d_idx = length_map[gl]
                 x = x_positions[g_idx] - group_width / 2 + bar_width * (t_idx + 0.5)
                 draw_stacked_bar(ax, x, bar_width * 0.85,
-                                 ref_f[d_idx], comp_f[d_idx], inc_f[d_idx])
+                                 ref_f[d_idx], comp_f[d_idx], inc_f[d_idx],
+                                 hatch=hatch)
 
         ax.set_title(title, fontweight="bold")
         ax.set_xticks(x_positions)
@@ -369,13 +374,12 @@ def plot_context_type_comparison(data: dict):
 
         # Add context type sub-labels if multiple types
         if n_types > 1:
-            # Add a small text legend for bar groups
             legend_handles = [
-                Patch(facecolor=COLORS.get(ct, "#999"), edgecolor="white",
+                Patch(facecolor="white", edgecolor="black", linewidth=0.8,
+                      hatch=TYPE_HATCHES[i % len(TYPE_HATCHES)],
                       label=LABELS.get(ct, ct))
-                for ct in ctx_types
+                for i, ct in enumerate(ctx_types)
             ]
-            # Put type legend in upper right
             type_leg = ax.legend(handles=legend_handles, loc="upper right",
                                  fontsize=8, title="Context type", title_fontsize=8)
             ax.add_artist(type_leg)
@@ -453,16 +457,16 @@ def plot_jailbreak_amplification(data: dict):
         bar_width = 0.35
 
         for g_idx, gl in enumerate(show_lengths):
-            # No jailbreak bar
+            # No jailbreak bar (solid)
             if gl in no_map:
                 r, c, i = no_map[gl]
                 draw_stacked_bar(ax, x_positions[g_idx] - bar_width / 2 - 0.02,
                                  bar_width, r, c, i)
-            # With jailbreak bar
+            # With jailbreak bar (hatched)
             if gl in jb_map:
                 r, c, i = jb_map[gl]
                 draw_stacked_bar(ax, x_positions[g_idx] + bar_width / 2 + 0.02,
-                                 bar_width, r, c, i)
+                                 bar_width, r, c, i, hatch="//")
 
         ax.set_title(LABELS[ctx_type], fontweight="bold", fontsize=12)
         ax.set_xticks(x_positions)
@@ -472,12 +476,12 @@ def plot_jailbreak_amplification(data: dict):
         ax.set_ylim(0, 1.05)
         ax.grid(True, axis="y", alpha=0.2)
 
-        # Condition legend
+        # Condition legend using hatching
         cond_handles = [
-            Patch(facecolor="#CCCCCC", edgecolor="black", linewidth=0.8,
+            Patch(facecolor="white", edgecolor="black", linewidth=0.8,
                   label="No jailbreak"),
-            Patch(facecolor="#666666", edgecolor="black", linewidth=0.8,
-                  label="With jailbreak"),
+            Patch(facecolor="white", edgecolor="black", linewidth=0.8,
+                  hatch="//", label="+ jailbreak"),
         ]
         ax.legend(handles=cond_handles, loc="upper left", fontsize=9)
 
@@ -487,14 +491,6 @@ def plot_jailbreak_amplification(data: dict):
     handles = band_legend_handles()
     fig.legend(handles=handles, loc="lower center", ncol=3, fontsize=10,
                bbox_to_anchor=(0.5, -0.02), frameon=True)
-
-    # Add bar labels
-    fig.text(0.25, 0.92, "Left bar = no jailbreak  |  Right bar = + jailbreak",
-             ha="center", fontsize=9, style="italic", color="#555555",
-             transform=fig.transFigure)
-    fig.text(0.75, 0.92, "Left bar = no jailbreak  |  Right bar = + jailbreak",
-             ha="center", fontsize=9, style="italic", color="#555555",
-             transform=fig.transFigure)
 
     fig.suptitle("Jailbreak Amplification of Context Rot",
                  fontsize=14, fontweight="bold", y=1.01)
@@ -538,16 +534,16 @@ def plot_persona_injection(data: dict):
     bar_width = 0.35
 
     for g_idx, gl in enumerate(all_lengths):
-        # No persona bar
+        # No persona bar (solid)
         if gl in no_map:
             r, c, i = no_map[gl]
             draw_stacked_bar(ax, x_positions[g_idx] - bar_width / 2 - 0.02,
                              bar_width, r, c, i)
-        # With persona bar
+        # With persona bar (hatched)
         if gl in p_map:
             r, c, i = p_map[gl]
             draw_stacked_bar(ax, x_positions[g_idx] + bar_width / 2 + 0.02,
-                             bar_width, r, c, i)
+                             bar_width, r, c, i, hatch="//")
 
     ax.set_xlabel("Context Length (tokens)")
     ax.set_ylabel("Proportion")
@@ -558,20 +554,14 @@ def plot_persona_injection(data: dict):
     ax.set_ylim(0, 1.05)
     ax.grid(True, axis="y", alpha=0.2)
 
-    # Condition legend
+    # Condition legend using hatching
     cond_handles = [
-        Patch(facecolor="#CCCCCC", edgecolor="black", linewidth=0.8,
+        Patch(facecolor="white", edgecolor="black", linewidth=0.8,
               label="Structured walk only"),
-        Patch(facecolor="#666666", edgecolor="black", linewidth=0.8,
-              label="+ persona injection"),
+        Patch(facecolor="white", edgecolor="black", linewidth=0.8,
+              hatch="//", label="+ persona injection"),
     ]
     ax.legend(handles=cond_handles, loc="upper right", fontsize=10)
-
-    # Add text annotation
-    ax.text(0.02, 0.95,
-            "Left bar = no injection  |  Right bar = + persona injection",
-            transform=ax.transAxes, fontsize=9, style="italic", color="#555555",
-            verticalalignment="top")
 
     # Band legend
     handles = band_legend_handles()
