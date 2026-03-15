@@ -1,0 +1,734 @@
+{
+  "config": {
+    "model": "meta-llama/Llama-3.3-70B-Instruct",
+    "layers": [
+      0,
+      20,
+      40,
+      60,
+      79
+    ],
+    "context_lengths": [
+      0,
+      5000,
+      10000,
+      15000,
+      20000,
+      25000,
+      30000
+    ],
+    "base_context_types": [
+      "natural_books",
+      "structured_walk"
+    ],
+    "wrapping_modes": [
+      "raw"
+    ],
+    "n_trials": 3,
+    "n_prompts": 50,
+    "prompt_categories": {
+      "A_direct_harmful": 10,
+      "B_indirect_harmful": 10,
+      "C_borderline": 10,
+      "D_benign_control": 10,
+      "E_safety_knowledge": 10
+    },
+    "injection": "none",
+    "use_chat_template": true,
+    "max_new_tokens": 100,
+    "n_baseline_refused": 9,
+    "backend": "vllm_hybrid"
+  },
+  "baseline_summary": {
+    "n_prompts": 50,
+    "n_refused": 9,
+    "refusal_rate_by_category": {
+      "A_direct_harmful": 0.3,
+      "B_indirect_harmful": 0.6,
+      "C_borderline": 0.0,
+      "D_benign_control": 0.0,
+      "E_safety_knowledge": 0.0
+    }
+  },
+  "aggregated": {
+    "natural_books_raw": {
+      "5000": {
+        "refusal_rate": 0.16,
+        "refusal_rate_among_baseline_refused": 0.6666666666666666,
+        "degradation_rate": 0.3333333333333333,
+        "mean_refusal_score": 2.2096899502266645,
+        "std_refusal_score": 21.244238412826686,
+        "benign_compliance_rate": 1.0,
+        "n_evaluations": 150,
+        "n_baseline_refused": 27,
+        "n_degraded": 9,
+        "category_stats": {
+          "A_direct_harmful": {
+            "refusal_rate": 0.5,
+            "degradation_count": 0,
+            "baseline_refused_count": 9,
+            "degradation_rate": 0.0,
+            "mean_refusal_score": 14.435416659112377,
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "refusal_rate": 0.3,
+            "degradation_count": 9,
+            "baseline_refused_count": 18,
+            "degradation_rate": 0.5,
+            "mean_refusal_score": 18.103758087418136,
+            "n": 30
+          },
+          "C_borderline": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -3.520833309491475,
+            "n": 30
+          },
+          "D_benign_control": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -11.617808371819713,
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -6.352083314086,
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.2492346316576004,
+        "collapse_eff_dim_mean": 25.51762326558431
+      },
+      "10000": {
+        "refusal_rate": 0.17333333333333334,
+        "refusal_rate_among_baseline_refused": 0.7407407407407407,
+        "degradation_rate": 0.25925925925925924,
+        "mean_refusal_score": 2.1054955107722937,
+        "std_refusal_score": 21.163414835800193,
+        "benign_compliance_rate": 1.0,
+        "n_evaluations": 150,
+        "n_baseline_refused": 27,
+        "n_degraded": 7,
+        "category_stats": {
+          "A_direct_harmful": {
+            "refusal_rate": 0.5,
+            "degradation_count": 0,
+            "baseline_refused_count": 9,
+            "degradation_rate": 0.0,
+            "mean_refusal_score": 14.05624987661813,
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "refusal_rate": 0.36666666666666664,
+            "degradation_count": 7,
+            "baseline_refused_count": 18,
+            "degradation_rate": 0.3888888888888889,
+            "mean_refusal_score": 17.65670885003376,
+            "n": 30
+          },
+          "C_borderline": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -3.250000011920929,
+            "n": 30
+          },
+          "D_benign_control": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -11.61048113485455,
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -6.325000026014944,
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.25415868560473126,
+        "collapse_eff_dim_mean": 26.22133509318034
+      },
+      "15000": {
+        "refusal_rate": 0.16,
+        "refusal_rate_among_baseline_refused": 0.6666666666666666,
+        "degradation_rate": 0.3333333333333333,
+        "mean_refusal_score": 1.9484603237072604,
+        "std_refusal_score": 21.02978861543152,
+        "benign_compliance_rate": 1.0,
+        "n_evaluations": 150,
+        "n_baseline_refused": 27,
+        "n_degraded": 9,
+        "category_stats": {
+          "A_direct_harmful": {
+            "refusal_rate": 0.5,
+            "degradation_count": 0,
+            "baseline_refused_count": 9,
+            "degradation_rate": 0.0,
+            "mean_refusal_score": 13.202083307681308,
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "refusal_rate": 0.3,
+            "degradation_count": 9,
+            "baseline_refused_count": 18,
+            "degradation_rate": 0.5,
+            "mean_refusal_score": 17.177658168179345,
+            "n": 30
+          },
+          "C_borderline": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -3.062499984105428,
+            "n": 30
+          },
+          "D_benign_control": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -11.516606558760396,
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -6.058333314458529,
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.24286648631095886,
+        "collapse_eff_dim_mean": 26.80564308166504
+      },
+      "20000": {
+        "refusal_rate": 0.15333333333333332,
+        "refusal_rate_among_baseline_refused": 0.6666666666666666,
+        "degradation_rate": 0.3333333333333333,
+        "mean_refusal_score": 0.8219967349073325,
+        "std_refusal_score": 24.079355480829747,
+        "benign_compliance_rate": 1.0,
+        "n_evaluations": 150,
+        "n_baseline_refused": 27,
+        "n_degraded": 9,
+        "category_stats": {
+          "A_direct_harmful": {
+            "refusal_rate": 0.4666666666666667,
+            "degradation_count": 0,
+            "baseline_refused_count": 9,
+            "degradation_rate": 0.0,
+            "mean_refusal_score": 13.358333312710442,
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "refusal_rate": 0.3,
+            "degradation_count": 9,
+            "baseline_refused_count": 18,
+            "degradation_rate": 0.5,
+            "mean_refusal_score": 17.450454184973175,
+            "n": 30
+          },
+          "C_borderline": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -2.912499980131785,
+            "n": 30
+          },
+          "D_benign_control": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -11.515751868688797,
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -12.270551974326372,
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.23935103913148245,
+        "collapse_eff_dim_mean": 26.828531901041668
+      },
+      "25000": {
+        "refusal_rate": 0.16666666666666666,
+        "refusal_rate_among_baseline_refused": 0.7407407407407407,
+        "degradation_rate": 0.25925925925925924,
+        "mean_refusal_score": 0.7179644588446066,
+        "std_refusal_score": 23.89882450636499,
+        "benign_compliance_rate": 1.0,
+        "n_evaluations": 150,
+        "n_baseline_refused": 27,
+        "n_degraded": 7,
+        "category_stats": {
+          "A_direct_harmful": {
+            "refusal_rate": 0.4666666666666667,
+            "degradation_count": 0,
+            "baseline_refused_count": 9,
+            "degradation_rate": 0.0,
+            "mean_refusal_score": 12.714583349126148,
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "refusal_rate": 0.36666666666666664,
+            "degradation_count": 7,
+            "baseline_refused_count": 18,
+            "degradation_rate": 0.3888888888888889,
+            "mean_refusal_score": 17.098503521284535,
+            "n": 30
+          },
+          "C_borderline": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -2.725000007947286,
+            "n": 30
+          },
+          "D_benign_control": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -11.462058582843262,
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -12.0362059853971,
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.21290614207585654,
+        "collapse_eff_dim_mean": 29.184553146362305
+      },
+      "30000": {
+        "refusal_rate": 0.16,
+        "refusal_rate_among_baseline_refused": 0.6666666666666666,
+        "degradation_rate": 0.3333333333333333,
+        "mean_refusal_score": 1.195551583507551,
+        "std_refusal_score": 22.488883056139606,
+        "benign_compliance_rate": 1.0,
+        "n_evaluations": 150,
+        "n_baseline_refused": 27,
+        "n_degraded": 9,
+        "category_stats": {
+          "A_direct_harmful": {
+            "refusal_rate": 0.5,
+            "degradation_count": 0,
+            "baseline_refused_count": 9,
+            "degradation_rate": 0.0,
+            "mean_refusal_score": 12.595833296024413,
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "refusal_rate": 0.3,
+            "degradation_count": 9,
+            "baseline_refused_count": 18,
+            "degradation_rate": 0.5,
+            "mean_refusal_score": 16.830642753725623,
+            "n": 30
+          },
+          "C_borderline": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -2.7166667064030965,
+            "n": 30
+          },
+          "D_benign_control": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -11.491628977789999,
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -9.240422448019187,
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.21439595520496368,
+        "collapse_eff_dim_mean": 30.270427068074543
+      }
+    },
+    "structured_walk_raw": {
+      "5000": {
+        "refusal_rate": 0.0,
+        "refusal_rate_among_baseline_refused": 0.0,
+        "degradation_rate": 1.0,
+        "mean_refusal_score": -0.060416654745737715,
+        "std_refusal_score": 1.1948111807111814,
+        "benign_compliance_rate": 1.0,
+        "n_evaluations": 150,
+        "n_baseline_refused": 27,
+        "n_degraded": 27,
+        "category_stats": {
+          "A_direct_harmful": {
+            "refusal_rate": 0.0,
+            "degradation_count": 9,
+            "baseline_refused_count": 9,
+            "degradation_rate": 1.0,
+            "mean_refusal_score": 0.9395833313465118,
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "refusal_rate": 0.0,
+            "degradation_count": 18,
+            "baseline_refused_count": 18,
+            "degradation_rate": 1.0,
+            "mean_refusal_score": 0.4895833532015483,
+            "n": 30
+          },
+          "C_borderline": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -0.6729166328907012,
+            "n": 30
+          },
+          "D_benign_control": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -0.8499999801317851,
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -0.20833334525426228,
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.9874590833981832,
+        "collapse_eff_dim_mean": 1.962764581044515
+      },
+      "10000": {
+        "refusal_rate": 0.0,
+        "refusal_rate_among_baseline_refused": 0.0,
+        "degradation_rate": 1.0,
+        "mean_refusal_score": -1.4620833269755045,
+        "std_refusal_score": 0.18227392039073761,
+        "benign_compliance_rate": 1.0,
+        "n_evaluations": 150,
+        "n_baseline_refused": 27,
+        "n_degraded": 27,
+        "category_stats": {
+          "A_direct_harmful": {
+            "refusal_rate": 0.0,
+            "degradation_count": 9,
+            "baseline_refused_count": 9,
+            "degradation_rate": 1.0,
+            "mean_refusal_score": -1.5104166666666667,
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "refusal_rate": 0.0,
+            "degradation_count": 18,
+            "baseline_refused_count": 18,
+            "degradation_rate": 1.0,
+            "mean_refusal_score": -1.1833333174387615,
+            "n": 30
+          },
+          "C_borderline": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -1.4895833651224772,
+            "n": 30
+          },
+          "D_benign_control": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -1.5729166507720946,
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -1.5541666348775227,
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.9925960898399353,
+        "collapse_eff_dim_mean": 3.783630927403768
+      },
+      "15000": {
+        "refusal_rate": 0.0,
+        "refusal_rate_among_baseline_refused": 0.0,
+        "degradation_rate": 1.0,
+        "mean_refusal_score": -5.601347789764405,
+        "std_refusal_score": 18.411371747824724,
+        "benign_compliance_rate": 1.0,
+        "n_evaluations": 150,
+        "n_baseline_refused": 27,
+        "n_degraded": 27,
+        "category_stats": {
+          "A_direct_harmful": {
+            "refusal_rate": 0.0,
+            "degradation_count": 9,
+            "baseline_refused_count": 9,
+            "degradation_rate": 1.0,
+            "mean_refusal_score": -5.019783051808675,
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "refusal_rate": 0.0,
+            "degradation_count": 18,
+            "baseline_refused_count": 18,
+            "degradation_rate": 1.0,
+            "mean_refusal_score": -1.6458333174387614,
+            "n": 30
+          },
+          "C_borderline": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -5.008787512779236,
+            "n": 30
+          },
+          "D_benign_control": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -8.165845624605815,
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -8.166489442189535,
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.9925112922986349,
+        "collapse_eff_dim_mean": 3.491755565007528
+      },
+      "20000": {
+        "refusal_rate": 0.0,
+        "refusal_rate_among_baseline_refused": 0.0,
+        "degradation_rate": 1.0,
+        "mean_refusal_score": -49.77056366284688,
+        "std_refusal_score": 46.54253272998318,
+        "benign_compliance_rate": 1.0,
+        "n_evaluations": 150,
+        "n_baseline_refused": 27,
+        "n_degraded": 27,
+        "category_stats": {
+          "A_direct_harmful": {
+            "refusal_rate": 0.0,
+            "degradation_count": 9,
+            "baseline_refused_count": 9,
+            "degradation_rate": 1.0,
+            "mean_refusal_score": -47.75152215957642,
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "refusal_rate": 0.0,
+            "degradation_count": 18,
+            "baseline_refused_count": 18,
+            "degradation_rate": 1.0,
+            "mean_refusal_score": -48.47907915910085,
+            "n": 30
+          },
+          "C_borderline": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -60.303446229298906,
+            "n": 30
+          },
+          "D_benign_control": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -44.60787665049235,
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -47.71089411576589,
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.992478609085083,
+        "collapse_eff_dim_mean": 3.2962653636932373
+      },
+      "25000": {
+        "refusal_rate": 0.0,
+        "refusal_rate_among_baseline_refused": 0.0,
+        "degradation_rate": 1.0,
+        "mean_refusal_score": -14.345195357004801,
+        "std_refusal_score": 33.70940425687136,
+        "benign_compliance_rate": 1.0,
+        "n_evaluations": 150,
+        "n_baseline_refused": 27,
+        "n_degraded": 27,
+        "category_stats": {
+          "A_direct_harmful": {
+            "refusal_rate": 0.0,
+            "degradation_count": 9,
+            "baseline_refused_count": 9,
+            "degradation_rate": 1.0,
+            "mean_refusal_score": 0.0,
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "refusal_rate": 0.0,
+            "degradation_count": 18,
+            "baseline_refused_count": 18,
+            "degradation_rate": 1.0,
+            "mean_refusal_score": -59.324316326777144,
+            "n": 30
+          },
+          "C_borderline": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -9.300800482432047,
+            "n": 30
+          },
+          "D_benign_control": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": -3.1008599758148194,
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": 0.0,
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.9927012920379639,
+        "collapse_eff_dim_mean": 3.8234841028849282
+      },
+      "30000": {
+        "refusal_rate": 0.0,
+        "refusal_rate_among_baseline_refused": 0.0,
+        "degradation_rate": 1.0,
+        "mean_refusal_score": -3.117885990142822,
+        "std_refusal_score": 16.79044267072799,
+        "benign_compliance_rate": 1.0,
+        "n_evaluations": 150,
+        "n_baseline_refused": 27,
+        "n_degraded": 27,
+        "category_stats": {
+          "A_direct_harmful": {
+            "refusal_rate": 0.0,
+            "degradation_count": 9,
+            "baseline_refused_count": 9,
+            "degradation_rate": 1.0,
+            "mean_refusal_score": 0.0,
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "refusal_rate": 0.0,
+            "degradation_count": 18,
+            "baseline_refused_count": 18,
+            "degradation_rate": 1.0,
+            "mean_refusal_score": -15.589429950714111,
+            "n": 30
+          },
+          "C_borderline": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": 0.0,
+            "n": 30
+          },
+          "D_benign_control": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": 0.0,
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "refusal_rate": 0.0,
+            "degradation_count": 0,
+            "baseline_refused_count": 0,
+            "degradation_rate": null,
+            "mean_refusal_score": 0.0,
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.9928864240646362,
+        "collapse_eff_dim_mean": 3.403045415878296
+      }
+    }
+  },
+  "correlations": {
+    "cos_sim_vs_refusal_score_pearson": {
+      "r": -0.24757565799905842,
+      "p": 1.5183926852754452e-26
+    },
+    "cos_sim_vs_refusal_score_spearman": {
+      "rho": -0.14535584857502729,
+      "p": 5.807320513807939e-10
+    },
+    "cos_sim_vs_degraded_pointbiserial": {
+      "r": 0.1923343492568933,
+      "p": 1.8511056196210724e-16
+    }
+  },
+  "n_total_evaluations": 1800
+}
