@@ -244,6 +244,8 @@ class HookedLLM:
             "gpt_neox": ("gpt_neox.layers", "input_layernorm", "post_attention_layernorm"),
             "qwen2": ("model.layers", "input_layernorm", "post_attention_layernorm"),
             "qwen3": ("model.layers", "input_layernorm", "post_attention_layernorm"),
+            "qwen3_5": ("model.layers", "input_layernorm", "post_attention_layernorm"),
+            "olmo3": ("model.layers", "input_layernorm", "post_attention_layernorm"),
             "gemma": ("model.layers", "input_layernorm", "post_attention_layernorm"),
             "gemma2": ("model.layers", "input_layernorm", "post_attention_layernorm"),
             "gemma3": ("model.text_model.layers", "input_layernorm", "post_attention_layernorm"),
@@ -451,6 +453,65 @@ class HookedLLM:
             cache._metadata = dict(self._cache._metadata)
 
         return logits, cache
+
+    def forward_incremental(
+        self,
+        input_ids: torch.Tensor,
+        layers: list[int],
+        past_key_values: Optional[tuple] = None,
+    ) -> tuple[torch.Tensor, ActivationCache, tuple]:
+        """
+        Incremental forward pass with KV-cache for efficient token-by-token processing.
+
+        This method enables tracking representation evolution as context grows by
+        processing one token at a time while maintaining the KV-cache. Unlike
+        forward_with_cache which processes all tokens at once, this method is
+        designed for iterative analysis of context effects.
+
+        Args:
+            input_ids: Token IDs to process, shape (batch_size, seq_len).
+                       If past_key_values is provided, should only contain new tokens.
+            layers: Layers to extract activations from
+            past_key_values: Cached key/value tensors from previous call.
+                            Pass None for the first token.
+
+        Returns:
+            Tuple of:
+                - logits: Model output logits, shape (batch_size, seq_len, vocab_size)
+                - cache: ActivationCache with residual stream activations
+                - new_past_key_values: Updated KV-cache for next iteration
+
+        Example:
+            # Track last-token representation as context grows
+            tokens = model.tokenizer.encode("The quick brown fox")
+            past_kvs = None
+            representations = []
+
+            for i, tok in enumerate(tokens):
+                input_ids = torch.tensor([[tok]]).to(model.device)
+                logits, cache, past_kvs = model.forward_incremental(
+                    input_ids, layers=[15], past_key_values=past_kvs
+                )
+                # cache contains activation for the new token only
+                rep = cache.get_residual_stream(15)[0, -1]  # Last position
+                representations.append(rep)
+        """
+        with self.hooks(layers=layers):
+            with torch.no_grad():
+                outputs = self.model(
+                    input_ids=input_ids,
+                    past_key_values=past_key_values,
+                    use_cache=True,
+                )
+
+            logits = outputs.logits
+
+            # Copy cache before context exit clears hooks
+            cache = ActivationCache()
+            cache._cache = dict(self._cache._cache)
+            cache._metadata = dict(self._cache._metadata)
+
+        return logits, cache, outputs.past_key_values
 
     def get_token_representations(
         self,
