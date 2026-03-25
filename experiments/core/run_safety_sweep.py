@@ -170,8 +170,6 @@ def build_sweep_c() -> list[dict]:
             "output_subdir": f"context_type/{ctx_type}",
             # Enable thinking mode for the _thinking variant
             "enable_thinking": ctx_type.endswith("_thinking"),
-            # Give thinking room for thinking variant
-            "max_new_tokens": 500 if ctx_type.endswith("_thinking") else 100,
         })
     return experiments
 
@@ -247,8 +245,14 @@ def build_experiment_command(exp: dict) -> list[str]:
     if exp.get("enable_thinking"):
         cmd.append("--enable-thinking")
 
-    # Override max-new-tokens if specified
-    max_new_tokens = exp.get("max_new_tokens", 100)
+    # Override max-new-tokens: 500 for Qwen3/3.5 (verbose thinking preamble),
+    # 100 for other models
+    if exp.get("max_new_tokens"):
+        max_new_tokens = exp["max_new_tokens"]
+    elif "Qwen3" in model or "qwen3" in model.lower():
+        max_new_tokens = 500
+    else:
+        max_new_tokens = 100
     cmd.extend(["--max-new-tokens", str(max_new_tokens)])
 
     # Backend selection
