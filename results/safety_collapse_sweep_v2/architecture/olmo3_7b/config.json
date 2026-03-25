@@ -1,0 +1,45 @@
+{
+  "model": "allenai/OLMo-3-7B-Instruct",
+  "layers": [
+    0,
+    8,
+    16,
+    24,
+    31
+  ],
+  "context_lengths": [
+    0,
+    50,
+    100,
+    200,
+    500,
+    1000,
+    2000,
+    5000,
+    10000,
+    20000,
+    30000,
+    50000
+  ],
+  "base_context_types": [
+    "natural_books",
+    "structured_walk_15"
+  ],
+  "wrapping_modes": [
+    "raw"
+  ],
+  "n_trials": 3,
+  "n_prompts": 50,
+  "prompt_categories": {
+    "A_direct_harmful": 10,
+    "B_indirect_harmful": 10,
+    "C_borderline": 10,
+    "D_benign_control": 10,
+    "E_safety_knowledge": 10
+  },
+  "injection": "none",
+  "use_chat_template": true,
+  "max_new_tokens": 100,
+  "n_baseline_refused": 22,
+  "backend": "vllm_hybrid"
+}

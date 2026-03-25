@@ -1,0 +1,43 @@
+{
+  "model": "Qwen/Qwen3.5-9B",
+  "layers": [
+    0,
+    8,
+    16,
+    24,
+    31
+  ],
+  "context_lengths": [
+    0,
+    100,
+    500,
+    2000,
+    10000,
+    50000,
+    150000,
+    262144
+  ],
+  "base_context_types": [
+    "structured_walk_15"
+  ],
+  "wrapping_modes": [
+    "raw"
+  ],
+  "n_trials": 3,
+  "n_prompts": 50,
+  "prompt_categories": {
+    "A_direct_harmful": 10,
+    "B_indirect_harmful": 10,
+    "C_borderline": 10,
+    "D_benign_control": 10,
+    "E_safety_knowledge": 10
+  },
+  "vocab_size": 15,
+  "injection": "none",
+  "use_chat_template": true,
+  "chunk_size": 512,
+  "max_new_tokens": 500,
+  "timestamp": "20260323_011421",
+  "quick_test": false,
+  "n_baseline_refused": 23
+}
