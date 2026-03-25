@@ -1227,12 +1227,17 @@ def generate_context_tokens(
     # ── random_tokens variants ──
     elif context_type.startswith("random_tokens_"):
         vocab_size = _parse_vocab_size_from_context_type(context_type, "random_tokens_")
-        # Use same vocabulary as structured_walk_N for direct comparison
-        g = _get_or_create_graph(vocab_size, seed=42)
-        vocab_words = g.tokens  # same word list as structured_walk
+
+        # Get vocabulary words — for small vocabs, slice from DEFAULT_VOCABULARY
+        # directly (graph construction fails for vocab < ~6 due to dual clustering)
+        if vocab_size < 15:
+            from src.data.hierarchical_graph import DEFAULT_VOCABULARY
+            vocab_words = DEFAULT_VOCABULARY[:vocab_size]
+        else:
+            g = _get_or_create_graph(vocab_size, seed=42)
+            vocab_words = g.tokens
 
         rng = random.Random(42 + trial_idx)
-        # Generate enough words to cover context_length tokens
         n_words = context_length * 2
         random_words = [rng.choice(vocab_words) for _ in range(n_words)]
         text = " ".join(random_words)

@@ -2,6 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Task Tracking
+
+**Read `TASKS.md` at the start of every session** to understand current priorities.
+
+After completing work:
+1. Update the task's status and results path in TASKS.md
+2. Move completed tasks to "Completed (recent)"
+3. Add new tasks discovered during the session
+4. Update "Last updated" timestamp
+
+When starting a long-running experiment, set status to `running` with PID/log file.
+When a session ends without completing all work, update TASKS.md with progress notes.
+
 ## Project Overview
 
 Research project investigating how in-context examples influence geometric structures in LLM representations. Bridges Park et al. (2024) "In-Context Learning of Representations" with Lee et al. (2025) "Influence Dynamics and Stagewise Data Attribution".
