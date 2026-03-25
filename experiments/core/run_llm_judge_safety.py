@@ -140,14 +140,17 @@ def parse_judge_response(text: str) -> dict:
 
     # Try to extract JSON from the response
     # Handle cases where Claude wraps in ```json ... ```
-    if "```json" in text:
-        start = text.index("```json") + 7
-        end = text.index("```", start)
-        text = text[start:end].strip()
-    elif "```" in text:
-        start = text.index("```") + 3
-        end = text.index("```", start)
-        text = text[start:end].strip()
+    try:
+        if "```json" in text:
+            start = text.index("```json") + 7
+            end = text.index("```", start)
+            text = text[start:end].strip()
+        elif "```" in text:
+            start = text.index("```") + 3
+            end = text.index("```", start)
+            text = text[start:end].strip()
+    except ValueError:
+        pass  # No closing ```, try parsing as-is
 
     try:
         parsed = json.loads(text)
