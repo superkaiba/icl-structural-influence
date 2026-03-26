@@ -365,6 +365,13 @@ After generating results, plots, or experiment summaries, **always commit and pu
 
 This applies to: experiment scripts, result JSONs, plot PNGs, experiment summary markdown files, and example files.
 
+**Incremental result commits**: When experiments complete (either foreground or background), commit their key result files promptly — don't wait for an entire sweep to finish. Track these files per experiment:
+- `config.json`, `baseline_audit.json`
+- `judge/all_results_judged.json`, `judge/judge_results.json`
+- Plot PNGs
+
+Skip committing the bulky redundant files (`all_results.json`, `raw/*.json`) unless specifically asked — the judged results contain everything needed for analysis.
+
 ## Implementation Guidelines
 
 **Test and Run**: When implementing new code, always:
