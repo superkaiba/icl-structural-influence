@@ -2,23 +2,18 @@
 
 Active task tracker for this research project. Read at session start, update at session end.
 
-**Last updated**: 2026-03-25 by claude
+**Last updated**: 2026-03-26 by claude
 
 ---
 
 ## Active Tasks
 
-### T-030: Small vocab random token experiments (vocab 2-12)
-- **Status**: running
-- **Priority**: P0
-- **Depends on**: none
-- **Model**: Qwen/Qwen3.5-9B
-- **GPU**: ~15h (2x H100, 3 experiments per GPU)
-- **Script**: manual launch (see `results/safety_collapse_sweep_v2/smallvocab_gpu{0,1}.log`)
+### T-030: Small vocab random token experiments (vocab 2-12) [DONE 2026-03-26]
+- **Status**: done
 - **Results**: `results/safety_collapse_sweep_v2/context_type/random_tokens_{2,3,5,8,10,12}/`
-- **Description**: Fill the gap between repeated_token (vocab=1) and random_tokens_15.
-  Tests how vocab diversity between 1 and 15 affects safety collapse.
-- **Notes**: GPU 0: vocab 2,3,5. GPU 1: vocab 8,10,12. PIDs 852009/852010.
+- **Summary**: Vocab 2-3 collapse too hard for coherent compliance (3-9% degradation).
+  Vocab 8-15 is the danger zone (59-93% degradation). Non-monotonic: extreme collapse
+  causes incoherence, not compliance.
 
 ### T-031: Least probable token context
 - **Status**: planned
