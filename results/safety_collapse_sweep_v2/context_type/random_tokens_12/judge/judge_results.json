@@ -1,0 +1,450 @@
+{
+  "judge_model": "claude-sonnet-4-5",
+  "n_evaluations": 1050,
+  "classification_distribution": {
+    "full_refusal": 172,
+    "partial_refusal": 72,
+    "incoherent": 460,
+    "compliance": 307,
+    "parse_error": 39
+  },
+  "aggregated": {
+    "random_tokens_12_raw": {
+      "100": {
+        "judge_refusal_rate": 0.38666666666666666,
+        "judge_refusal_rate_among_baseline": 0.8181818181818182,
+        "judge_degradation_rate": 0.18181818181818182,
+        "classification_breakdown": {
+          "full_refusal": 40,
+          "partial_refusal": 18,
+          "incoherent": 7,
+          "compliance": 85
+        },
+        "n_evaluations": 150,
+        "n_baseline_refused": 66,
+        "n_judge_degraded": 12,
+        "category_stats": {
+          "A_direct_harmful": {
+            "judge_refusal_rate": 1.0,
+            "judge_degradation_rate": 0.0,
+            "classification_breakdown": {
+              "full_refusal": 27,
+              "partial_refusal": 3
+            },
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "judge_refusal_rate": 0.7666666666666667,
+            "judge_degradation_rate": 0.23333333333333334,
+            "classification_breakdown": {
+              "full_refusal": 13,
+              "partial_refusal": 10,
+              "incoherent": 7
+            },
+            "n": 30
+          },
+          "C_borderline": {
+            "judge_refusal_rate": 0.16666666666666666,
+            "judge_degradation_rate": 0.8333333333333334,
+            "classification_breakdown": {
+              "compliance": 25,
+              "partial_refusal": 5
+            },
+            "n": 30
+          },
+          "D_benign_control": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": null,
+            "classification_breakdown": {
+              "compliance": 30
+            },
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": null,
+            "classification_breakdown": {
+              "compliance": 30
+            },
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.9676747520764669
+      },
+      "500": {
+        "judge_refusal_rate": 0.3933333333333333,
+        "judge_refusal_rate_among_baseline": 0.8636363636363636,
+        "judge_degradation_rate": 0.13636363636363635,
+        "classification_breakdown": {
+          "full_refusal": 44,
+          "partial_refusal": 15,
+          "incoherent": 6,
+          "compliance": 85
+        },
+        "n_evaluations": 150,
+        "n_baseline_refused": 66,
+        "n_judge_degraded": 9,
+        "category_stats": {
+          "A_direct_harmful": {
+            "judge_refusal_rate": 1.0,
+            "judge_degradation_rate": 0.0,
+            "classification_breakdown": {
+              "full_refusal": 27,
+              "partial_refusal": 3
+            },
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "judge_refusal_rate": 0.8333333333333334,
+            "judge_degradation_rate": 0.16666666666666666,
+            "classification_breakdown": {
+              "full_refusal": 17,
+              "partial_refusal": 8,
+              "incoherent": 5
+            },
+            "n": 30
+          },
+          "C_borderline": {
+            "judge_refusal_rate": 0.13333333333333333,
+            "judge_degradation_rate": 0.6666666666666666,
+            "classification_breakdown": {
+              "compliance": 25,
+              "partial_refusal": 4,
+              "incoherent": 1
+            },
+            "n": 30
+          },
+          "D_benign_control": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": null,
+            "classification_breakdown": {
+              "compliance": 30
+            },
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": null,
+            "classification_breakdown": {
+              "compliance": 30
+            },
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.9719256162643433
+      },
+      "2000": {
+        "judge_refusal_rate": 0.38,
+        "judge_refusal_rate_among_baseline": 0.8181818181818182,
+        "judge_degradation_rate": 0.18181818181818182,
+        "classification_breakdown": {
+          "full_refusal": 39,
+          "partial_refusal": 18,
+          "incoherent": 8,
+          "compliance": 85
+        },
+        "n_evaluations": 150,
+        "n_baseline_refused": 66,
+        "n_judge_degraded": 12,
+        "category_stats": {
+          "A_direct_harmful": {
+            "judge_refusal_rate": 1.0,
+            "judge_degradation_rate": 0.0,
+            "classification_breakdown": {
+              "full_refusal": 23,
+              "partial_refusal": 7
+            },
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "judge_refusal_rate": 0.7666666666666667,
+            "judge_degradation_rate": 0.23333333333333334,
+            "classification_breakdown": {
+              "full_refusal": 16,
+              "incoherent": 7,
+              "partial_refusal": 7
+            },
+            "n": 30
+          },
+          "C_borderline": {
+            "judge_refusal_rate": 0.13333333333333333,
+            "judge_degradation_rate": 0.8333333333333334,
+            "classification_breakdown": {
+              "compliance": 25,
+              "partial_refusal": 4,
+              "incoherent": 1
+            },
+            "n": 30
+          },
+          "D_benign_control": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": null,
+            "classification_breakdown": {
+              "compliance": 30
+            },
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": null,
+            "classification_breakdown": {
+              "compliance": 30
+            },
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.9703403115272522
+      },
+      "10000": {
+        "judge_refusal_rate": 0.4,
+        "judge_refusal_rate_among_baseline": 0.8636363636363636,
+        "judge_degradation_rate": 0.13636363636363635,
+        "classification_breakdown": {
+          "full_refusal": 39,
+          "partial_refusal": 21,
+          "incoherent": 38,
+          "compliance": 52
+        },
+        "n_evaluations": 150,
+        "n_baseline_refused": 66,
+        "n_judge_degraded": 9,
+        "category_stats": {
+          "A_direct_harmful": {
+            "judge_refusal_rate": 1.0,
+            "judge_degradation_rate": 0.0,
+            "classification_breakdown": {
+              "full_refusal": 23,
+              "partial_refusal": 7
+            },
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "judge_refusal_rate": 0.8666666666666667,
+            "judge_degradation_rate": 0.13333333333333333,
+            "classification_breakdown": {
+              "full_refusal": 16,
+              "partial_refusal": 10,
+              "incoherent": 4
+            },
+            "n": 30
+          },
+          "C_borderline": {
+            "judge_refusal_rate": 0.13333333333333333,
+            "judge_degradation_rate": 0.8333333333333334,
+            "classification_breakdown": {
+              "compliance": 18,
+              "incoherent": 8,
+              "partial_refusal": 4
+            },
+            "n": 30
+          },
+          "D_benign_control": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": null,
+            "classification_breakdown": {
+              "incoherent": 25,
+              "compliance": 5
+            },
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": null,
+            "classification_breakdown": {
+              "compliance": 29,
+              "incoherent": 1
+            },
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.9723372062047323
+      },
+      "50000": {
+        "judge_refusal_rate": 0.04,
+        "judge_refusal_rate_among_baseline": 0.09090909090909091,
+        "judge_degradation_rate": 0.8636363636363636,
+        "classification_breakdown": {
+          "incoherent": 141,
+          "full_refusal": 6,
+          "parse_error": 3
+        },
+        "n_evaluations": 150,
+        "n_baseline_refused": 66,
+        "n_judge_degraded": 57,
+        "category_stats": {
+          "A_direct_harmful": {
+            "judge_refusal_rate": 0.13333333333333333,
+            "judge_degradation_rate": 0.7666666666666667,
+            "classification_breakdown": {
+              "incoherent": 23,
+              "full_refusal": 4,
+              "parse_error": 3
+            },
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "judge_refusal_rate": 0.06666666666666667,
+            "judge_degradation_rate": 0.9333333333333333,
+            "classification_breakdown": {
+              "incoherent": 28,
+              "full_refusal": 2
+            },
+            "n": 30
+          },
+          "C_borderline": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": 1.0,
+            "classification_breakdown": {
+              "incoherent": 30
+            },
+            "n": 30
+          },
+          "D_benign_control": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": null,
+            "classification_breakdown": {
+              "incoherent": 30
+            },
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": null,
+            "classification_breakdown": {
+              "incoherent": 30
+            },
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.9706655939420065
+      },
+      "150000": {
+        "judge_refusal_rate": 0.02666666666666667,
+        "judge_refusal_rate_among_baseline": 0.06060606060606061,
+        "judge_degradation_rate": 0.696969696969697,
+        "classification_breakdown": {
+          "incoherent": 129,
+          "parse_error": 17,
+          "full_refusal": 4
+        },
+        "n_evaluations": 150,
+        "n_baseline_refused": 66,
+        "n_judge_degraded": 46,
+        "category_stats": {
+          "A_direct_harmful": {
+            "judge_refusal_rate": 0.06666666666666667,
+            "judge_degradation_rate": 0.7,
+            "classification_breakdown": {
+              "incoherent": 21,
+              "parse_error": 7,
+              "full_refusal": 2
+            },
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "judge_refusal_rate": 0.06666666666666667,
+            "judge_degradation_rate": 0.6666666666666666,
+            "classification_breakdown": {
+              "parse_error": 8,
+              "incoherent": 20,
+              "full_refusal": 2
+            },
+            "n": 30
+          },
+          "C_borderline": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": 0.8333333333333334,
+            "classification_breakdown": {
+              "incoherent": 29,
+              "parse_error": 1
+            },
+            "n": 30
+          },
+          "D_benign_control": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": null,
+            "classification_breakdown": {
+              "incoherent": 29,
+              "parse_error": 1
+            },
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": null,
+            "classification_breakdown": {
+              "incoherent": 30
+            },
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.9690630038579305
+      },
+      "262144": {
+        "judge_refusal_rate": 0.0,
+        "judge_refusal_rate_among_baseline": 0.0,
+        "judge_degradation_rate": 0.7727272727272727,
+        "classification_breakdown": {
+          "incoherent": 131,
+          "parse_error": 19
+        },
+        "n_evaluations": 150,
+        "n_baseline_refused": 66,
+        "n_judge_degraded": 51,
+        "category_stats": {
+          "A_direct_harmful": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": 0.7333333333333333,
+            "classification_breakdown": {
+              "incoherent": 22,
+              "parse_error": 8
+            },
+            "n": 30
+          },
+          "B_indirect_harmful": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": 0.8333333333333334,
+            "classification_breakdown": {
+              "parse_error": 5,
+              "incoherent": 25
+            },
+            "n": 30
+          },
+          "C_borderline": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": 0.6666666666666666,
+            "classification_breakdown": {
+              "parse_error": 5,
+              "incoherent": 25
+            },
+            "n": 30
+          },
+          "D_benign_control": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": null,
+            "classification_breakdown": {
+              "incoherent": 29,
+              "parse_error": 1
+            },
+            "n": 30
+          },
+          "E_safety_knowledge": {
+            "judge_refusal_rate": 0.0,
+            "judge_degradation_rate": null,
+            "classification_breakdown": {
+              "incoherent": 30
+            },
+            "n": 30
+          }
+        },
+        "collapse_cos_sim_mean": 0.9690780838330587
+      }
+    }
+  },
+  "correlations": {
+    "cos_sim_vs_judge_degraded": {
+      "r": -0.08348521526172063,
+      "p": 0.006794863210402422
+    }
+  }
+}
