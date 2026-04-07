@@ -30,6 +30,7 @@ class CollapseMetrics:
     spread: float       # Total variance (trace of covariance)
     effective_dim: float  # Participation ratio (linear)
     intrinsic_dim: Optional[float] = None  # Two-NN estimator (nonlinear)
+    std_cos_sim: Optional[float] = None  # Std of pairwise cosine similarities
 
     # Optional diagnostic metrics
     centroid_norm: Optional[float] = None  # Norm of the centroid
@@ -44,6 +45,7 @@ class CollapseMetrics:
             "spread": self.spread,
             "effective_dim": self.effective_dim,
             "intrinsic_dim": self.intrinsic_dim,
+            "std_cos_sim": self.std_cos_sim,
             "centroid_norm": self.centroid_norm,
             "max_pairwise_dist": self.max_pairwise_dist,
             "min_pairwise_dist": self.min_pairwise_dist,
@@ -104,6 +106,7 @@ def _compute_intrinsic_dim_twonn(reps: np.ndarray) -> Optional[float]:
 def compute_collapse_metrics(
     representations: list[np.ndarray],
     compute_diagnostics: bool = False,
+    skip_intrinsic_dim: bool = False,
 ) -> CollapseMetrics:
     """
     Compute all collapse-related metrics for a window of representations.
@@ -115,6 +118,7 @@ def compute_collapse_metrics(
     Args:
         representations: List of representation vectors (numpy arrays)
         compute_diagnostics: Whether to compute optional diagnostic metrics
+        skip_intrinsic_dim: If True, skip Two-NN intrinsic dim (faster for trajectories)
 
     Returns:
         CollapseMetrics dataclass with all computed values
@@ -126,6 +130,7 @@ def compute_collapse_metrics(
             spread=0.0,
             effective_dim=0.0,
             intrinsic_dim=None,
+            std_cos_sim=0.0,
         )
 
     reps = np.array(representations)
@@ -142,32 +147,34 @@ def compute_collapse_metrics(
 
     # Extract upper triangle (excluding diagonal)
     mask = np.triu(np.ones((n, n), dtype=bool), k=1)
-    avg_cos_sim = float(cos_sim_matrix[mask].mean()) if mask.sum() > 0 else 1.0
+    pairwise_cos = cos_sim_matrix[mask]
+    avg_cos_sim = float(pairwise_cos.mean()) if len(pairwise_cos) > 0 else 1.0
+    std_cos_sim = float(pairwise_cos.std()) if len(pairwise_cos) > 0 else 0.0
 
-    # 2. Mean pairwise L2 distance
-    l2_dists = []
-    for i in range(n):
-        for j in range(i + 1, n):
-            l2_dists.append(np.linalg.norm(reps[i] - reps[j]))
-    avg_l2_dist = float(np.mean(l2_dists)) if l2_dists else 0.0
+    # 2. Mean pairwise L2 distance (vectorized)
+    from scipy.spatial.distance import pdist
+    l2_dists = pdist(reps)
+    avg_l2_dist = float(np.mean(l2_dists)) if len(l2_dists) > 0 else 0.0
 
     # 3. Spread (total variance)
-    # Compute as trace of covariance matrix = sum of variances across dimensions
     centered = reps - reps.mean(axis=0)
     spread = float(np.var(centered, axis=0).sum())
 
     # 4. Effective dimension (participation ratio)
     # PR = (sum of eigenvalues)^2 / sum(eigenvalues^2)
-    # This measures how many dimensions carry significant variance
+    # Uses Gram matrix trick when n_samples < n_dims for efficiency
     if n > 1:
-        cov = np.cov(reps.T)
-        # Handle 1D case
-        if cov.ndim == 0:
-            eigenvalues = np.array([float(cov)])
+        d = reps.shape[1] if reps.ndim > 1 else 1
+        if d == 1:
+            eigenvalues = np.array([float(np.var(reps))])
+        elif n <= d:
+            # Gram matrix trick: O(n^3) instead of O(d^3)
+            gram = centered @ centered.T / (n - 1)
+            eigenvalues = np.linalg.eigvalsh(gram)
         else:
+            cov = np.cov(reps.T)
             eigenvalues = np.linalg.eigvalsh(cov)
 
-        # Ensure non-negative (numerical stability)
         eigenvalues = np.maximum(eigenvalues, 0)
         total = eigenvalues.sum()
 
@@ -179,7 +186,7 @@ def compute_collapse_metrics(
         eff_dim = 0.0
 
     # 5. Intrinsic dimension (Two-NN estimator - nonlinear)
-    intrinsic_dim = _compute_intrinsic_dim_twonn(reps)
+    intrinsic_dim = None if skip_intrinsic_dim else _compute_intrinsic_dim_twonn(reps)
 
     # Optional diagnostic metrics
     centroid_norm = None
@@ -190,7 +197,7 @@ def compute_collapse_metrics(
         centroid = reps.mean(axis=0)
         centroid_norm = float(np.linalg.norm(centroid))
 
-        if l2_dists:
+        if len(l2_dists) > 0:
             max_pairwise_dist = float(np.max(l2_dists))
             min_pairwise_dist = float(np.min(l2_dists))
 
@@ -200,6 +207,7 @@ def compute_collapse_metrics(
         spread=spread,
         effective_dim=eff_dim,
         intrinsic_dim=intrinsic_dim,
+        std_cos_sim=std_cos_sim,
         centroid_norm=centroid_norm,
         max_pairwise_dist=max_pairwise_dist,
         min_pairwise_dist=min_pairwise_dist,

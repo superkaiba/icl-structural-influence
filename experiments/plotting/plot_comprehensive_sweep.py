@@ -49,10 +49,15 @@ LEGEND = [
 # ── Helpers ───────────────────────────────────────────────────────────
 
 def load_judged(path: Path) -> list[dict]:
-    """Load LLM-judged results from a directory."""
+    """Load LLM-judged results from a directory, falling back to unjudged."""
     p = path / "judge" / "all_results_judged.json"
     if p.exists():
         with open(p) as f:
+            return json.load(f)
+    # Fallback to unjudged all_results.json (keyword classifier)
+    p2 = path / "all_results.json"
+    if p2.exists():
+        with open(p2) as f:
             return json.load(f)
     return []
 
@@ -172,20 +177,23 @@ def plot_model_size():
         "27B": V2_DIR / "model_size" / "qwen35_27b",
     }
 
-    # Also check v1 paths as fallback
-    v1_fallbacks = {
-        "0.8B": V1_DIR / "model_gen" / "qwen35_0.8b",
-        "2B": V1_DIR / "model_gen" / "qwen35_2b",
-        "4B": V1_DIR / "model_gen" / "qwen35_4b",
-        "9B": V1_DIR / "model_gen" / "qwen35_9b",
-        "27B": V1_DIR / "model_gen" / "qwen35_27b",
+    # Fallback paths: 9B is in context_length/, older data in v1
+    fallbacks = {
+        "9B": [V2_DIR / "context_length" / "qwen35_9b"],
+        "0.8B": [V1_DIR / "model_gen" / "qwen35_0.8b"],
+        "2B": [V1_DIR / "model_gen" / "qwen35_2b"],
+        "4B": [V1_DIR / "model_gen" / "qwen35_4b"],
+        "27B": [V1_DIR / "model_gen" / "qwen35_27b"],
     }
 
     available = {}
     for label in models:
         d = load_judged(models[label])
-        if not d and label in v1_fallbacks:
-            d = load_judged(v1_fallbacks[label])
+        if not d:
+            for fb in fallbacks.get(label, []):
+                d = load_judged(fb)
+                if d:
+                    break
         if d:
             available[label] = d
 
@@ -226,6 +234,12 @@ def plot_context_type():
         ("structured_walk_1000", "Walk vocab=1000"),
     ]
     random_types = [
+        ("random_tokens_2", "Random vocab=2"),
+        ("random_tokens_3", "Random vocab=3"),
+        ("random_tokens_5", "Random vocab=5"),
+        ("random_tokens_8", "Random vocab=8"),
+        ("random_tokens_10", "Random vocab=10"),
+        ("random_tokens_12", "Random vocab=12"),
         ("random_tokens_15", "Random vocab=15"),
         ("random_tokens_50", "Random vocab=50"),
         ("random_tokens_200", "Random vocab=200"),
@@ -233,6 +247,7 @@ def plot_context_type():
     ]
     other_types = [
         ("repeated_token", "Repeated token"),
+        ("least_probable_tokens", "Least probable"),
         ("lorem_ipsum", "Lorem ipsum"),
         ("natural_books", "Natural books"),
     ]
@@ -585,6 +600,219 @@ def plot_context_length():
     print("  Saved: 08_context_length.png")
 
 
+# ── Plot 9: Vocab Size Sweep (T-030) ─────────────────────────────────
+
+def plot_vocab_size_sweep():
+    """Sweep compliance rate vs vocabulary size (T-030).
+
+    Shows how token diversity (1 to 1000) affects safety degradation.
+    Includes repeated_token (vocab=1) through random_tokens_1000.
+    """
+    vocab_map = [
+        (1, "repeated_token", "Repeated (1)"),
+        (2, "random_tokens_2", "Random (2)"),
+        (3, "random_tokens_3", "Random (3)"),
+        (5, "random_tokens_5", "Random (5)"),
+        (8, "random_tokens_8", "Random (8)"),
+        (10, "random_tokens_10", "Random (10)"),
+        (12, "random_tokens_12", "Random (12)"),
+        (15, "random_tokens_15", "Random (15)"),
+        (50, "random_tokens_50", "Random (50)"),
+        (200, "random_tokens_200", "Random (200)"),
+        (1000, "random_tokens_1000", "Random (1000)"),
+    ]
+
+    # Load available data
+    available = []
+    for vocab, ctx_type, label in vocab_map:
+        d = load_judged(V2_DIR / "context_type" / ctx_type)
+        if not d:
+            # Try unjudged
+            p = V2_DIR / "context_type" / ctx_type / "all_results.json"
+            if p.exists():
+                with open(p) as f:
+                    d = json.load(f)
+        if d:
+            condition = f"{ctx_type}_raw"
+            available.append((vocab, label, d, condition))
+
+    if len(available) < 3:
+        print("  SKIP: vocab_size_sweep (< 3 vocab sizes available)")
+        return
+
+    # Target context lengths to show
+    target_lengths = [100, 500, 2000, 10000, 50000]
+    colors = plt.cm.viridis(np.linspace(0.15, 0.85, len(target_lengths)))
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+
+    # Left: compliance rate vs vocab size at each context length
+    for li, tgt_len in enumerate(target_lengths):
+        vocabs, compliances = [], []
+        for vocab, label, data, condition in available:
+            stats = three_way_split(data, condition=condition)
+            # Find closest available length
+            if tgt_len in stats:
+                compliances.append(stats[tgt_len]["compliance"])
+                vocabs.append(vocab)
+        if vocabs:
+            ax1.plot(vocabs, compliances, 'o-', color=colors[li],
+                     label=f"{fmt_len(tgt_len)} tokens", markersize=5)
+
+    ax1.set_xscale("log")
+    ax1.set_xlabel("Vocabulary Size", fontsize=11)
+    ax1.set_ylabel("Compliance Rate (baseline-refused)", fontsize=11)
+    ax1.set_title("Safety Compliance vs Token Diversity", fontsize=12, fontweight="bold")
+    ax1.legend(fontsize=9)
+    ax1.set_ylim(-0.05, 1.05)
+    ax1.grid(alpha=0.3)
+
+    # Right: effective dimension vs vocab size at each context length
+    for li, tgt_len in enumerate(target_lengths):
+        vocabs, effdims = [], []
+        for vocab, label, data, condition in available:
+            # Get collapse metrics for this condition+length
+            for r in data:
+                if (r.get("condition") == condition and
+                    r.get("context_length") == tgt_len):
+                    cm = r.get("collapse_metrics", {})
+                    # Find the last layer
+                    layers = sorted(cm.keys(), key=lambda x: int(x) if x.isdigit() else 0)
+                    if layers:
+                        last_layer = layers[-1]
+                        if cm[last_layer] and "effective_dim" in cm[last_layer]:
+                            effdims.append(cm[last_layer]["effective_dim"])
+                            vocabs.append(vocab)
+                    break  # Only need one sample per condition
+        if vocabs:
+            ax2.plot(vocabs, effdims, 'o-', color=colors[li],
+                     label=f"{fmt_len(tgt_len)} tokens", markersize=5)
+
+    ax2.set_xscale("log")
+    ax2.set_xlabel("Vocabulary Size", fontsize=11)
+    ax2.set_ylabel("Effective Dimension (last layer)", fontsize=11)
+    ax2.set_title("Representation Diversity vs Token Diversity", fontsize=12, fontweight="bold")
+    ax2.legend(fontsize=9)
+    ax2.grid(alpha=0.3)
+
+    plt.suptitle("Vocabulary Size Sweep: random_tokens_N (Qwen3.5-9B)", fontsize=13, fontweight="bold")
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    fig.savefig(OUTPUT_DIR / "09_vocab_size_sweep.png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print("  Saved: 09_vocab_size_sweep.png")
+
+
+# ── Plot 10: Structure Amount Sweep (T-033) ──────────────────────────
+
+def plot_structure_amount_sweep():
+    """Sweep compliance rate vs structure amount (p_intra variation, T-033).
+
+    Shows how graph structure strength affects safety degradation,
+    from fully random (p=0) to strongly clustered (p=0.95).
+    """
+    p_values = [0, 15, 30, 50, 65, 80, 95]
+    p_labels = [f"p={p/100:.2f}" for p in p_values]
+
+    available = []
+    for p in p_values:
+        if p == 80:
+            # Default p_intra=0.80 is the standard structured_walk_15
+            ctx_type = "structured_walk_15"
+        else:
+            ctx_type = f"structured_walk_15_p{p}"
+        d = load_judged(V2_DIR / "context_type" / ctx_type)
+        if not d:
+            p2 = V2_DIR / "context_type" / ctx_type / "all_results.json"
+            if p2.exists():
+                with open(p2) as f:
+                    d = json.load(f)
+        if d:
+            condition = f"{ctx_type}_raw"
+            available.append((p / 100.0, f"p_intra={p/100:.2f}", d, condition))
+
+    if len(available) < 3:
+        print("  SKIP: structure_amount_sweep (< 3 p_intra values available)")
+        return
+
+    target_lengths = [100, 500, 2000, 10000, 50000]
+    colors = plt.cm.plasma(np.linspace(0.15, 0.85, len(target_lengths)))
+
+    fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+
+    for li, tgt_len in enumerate(target_lengths):
+        ps, compliances = [], []
+        for p_val, label, data, condition in available:
+            stats = three_way_split(data, condition=condition)
+            if tgt_len in stats:
+                compliances.append(stats[tgt_len]["compliance"])
+                ps.append(p_val)
+        if ps:
+            ax.plot(ps, compliances, 'o-', color=colors[li],
+                    label=f"{fmt_len(tgt_len)} tokens", markersize=6)
+
+    ax.set_xlabel("p_intra (structure strength)", fontsize=11)
+    ax.set_ylabel("Compliance Rate (baseline-refused)", fontsize=11)
+    ax.set_title("Safety Compliance vs Graph Structure Strength\n"
+                 "(structured_walk_15 with varying p_intra, Qwen3.5-9B)",
+                 fontsize=12, fontweight="bold")
+    ax.legend(fontsize=9)
+    ax.set_ylim(-0.05, 1.05)
+    ax.set_xlim(-0.05, 1.05)
+    ax.grid(alpha=0.3)
+
+    plt.tight_layout()
+    fig.savefig(OUTPUT_DIR / "10_structure_amount_sweep.png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print("  Saved: 10_structure_amount_sweep.png")
+
+
+# ── Plot 11: Least Probable Tokens Comparison (T-031) ────────────────
+
+def plot_least_probable():
+    """Compare least_probable_tokens against random_tokens and structured_walk."""
+    comparisons = [
+        ("least_probable_tokens", "Least probable (adversarial)"),
+        ("random_tokens_15", "Random vocab=15"),
+        ("structured_walk_15", "Structured walk vocab=15"),
+        ("repeated_token", "Repeated token"),
+    ]
+
+    available = {}
+    for ctx_type, label in comparisons:
+        d = load_judged(V2_DIR / "context_type" / ctx_type)
+        if not d:
+            p = V2_DIR / "context_type" / ctx_type / "all_results.json"
+            if p.exists():
+                with open(p) as f:
+                    d = json.load(f)
+        if d:
+            available[label] = (d, f"{ctx_type}_raw")
+
+    if "Least probable (adversarial)" not in available:
+        print("  SKIP: least_probable (no least_probable_tokens data)")
+        return
+
+    n = len(available)
+    fig, axes = plt.subplots(1, n, figsize=(5 * n, 5), squeeze=False)
+
+    for i, (label, (data, condition)) in enumerate(available.items()):
+        stats = three_way_split(data, condition=condition)
+        if not stats:
+            stats = three_way_split(data, condition=condition, baseline_only=False)
+        draw_stacked(axes[0, i], stats, label, use_log_x=True)
+        if i == 0:
+            axes[0, i].set_ylabel("Proportion", fontsize=10)
+
+    fig.legend(handles=LEGEND, loc="lower center", ncol=3, fontsize=10,
+               frameon=True, bbox_to_anchor=(0.5, -0.02))
+    fig.suptitle("Adversarial Context: Least Probable Tokens vs Baselines (Qwen3.5-9B)",
+                 fontsize=13, fontweight="bold")
+    plt.tight_layout(rect=[0, 0.04, 1, 0.95])
+    fig.savefig(OUTPUT_DIR / "11_least_probable.png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print("  Saved: 11_least_probable.png")
+
+
 # ── Main ─────────────────────────────────────────────────────────────
 
 def main():
@@ -600,6 +828,9 @@ def main():
     plot_compliance_heatmap()
     plot_collapse_vs_safety()
     plot_context_length()
+    plot_vocab_size_sweep()
+    plot_structure_amount_sweep()
+    plot_least_probable()
 
     print("\nAll plots generated.")
 

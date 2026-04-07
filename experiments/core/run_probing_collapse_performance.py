@@ -219,20 +219,12 @@ def deep_copy_kv_cache(past_key_values):
     if past_key_values is None:
         return None
 
-    # DynamicCache (transformers >= 4.36)
+    # DynamicCache and subclasses (e.g., Qwen3_5DynamicCache with sparse layers)
+    # Use deepcopy which handles custom cache types correctly, including
+    # architectures with hybrid attention where some layers have None KV entries.
     if hasattr(past_key_values, 'key_cache'):
-        try:
-            from transformers.cache_utils import DynamicCache
-            new_cache = DynamicCache()
-            for layer_idx in range(len(past_key_values.key_cache)):
-                new_cache.update(
-                    past_key_values.key_cache[layer_idx].clone(),
-                    past_key_values.value_cache[layer_idx].clone(),
-                    layer_idx,
-                )
-            return new_cache
-        except ImportError:
-            pass
+        import copy
+        return copy.deepcopy(past_key_values)
 
     # Tuple-of-tuples format
     if isinstance(past_key_values, tuple):

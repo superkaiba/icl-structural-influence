@@ -83,6 +83,12 @@ LARGE_VLLM_MODELS = {
 # Sweep C: Representative context lengths (8 points)
 SWEEP_C_LENGTHS = [0, 100, 500, 2000, 10000, 50000, 150000, 262144]
 
+# Sweep C: Shorter lengths for expensive context types (e.g., least_probable_tokens)
+SWEEP_C_LENGTHS_SHORT = [0, 100, 500, 2000, 10000, 50000]
+
+# Context types that use shorter length list (autoregressive generation is slow)
+SLOW_CONTEXT_TYPES = {"least_probable_tokens"}
+
 # Sweep C: Context types to test
 SWEEP_C_CONTEXT_TYPES = [
     "repeated_token",
@@ -97,6 +103,22 @@ SWEEP_C_CONTEXT_TYPES = [
     "lorem_ipsum",
     "natural_books",
     "structured_walk_15_thinking",
+    # T-030: Small vocab random tokens
+    "random_tokens_2",
+    "random_tokens_3",
+    "random_tokens_5",
+    "random_tokens_8",
+    "random_tokens_10",
+    "random_tokens_12",
+    # T-031: Adversarial context
+    "least_probable_tokens",
+    # T-033: Structure amount sweep (p_intra variation)
+    "structured_walk_15_p0",
+    "structured_walk_15_p15",
+    "structured_walk_15_p30",
+    "structured_walk_15_p50",
+    "structured_walk_15_p65",
+    "structured_walk_15_p95",
 ]
 
 
@@ -157,9 +179,12 @@ def build_sweep_b() -> list[dict]:
 def build_sweep_c() -> list[dict]:
     """Sweep C: Context Type (default model, 8 representative lengths)."""
     max_ctx = MODEL_MAX_CTX[DEFAULT_MODEL]
-    lengths = [l for l in SWEEP_C_LENGTHS if l <= max_ctx]
+    lengths_full = [l for l in SWEEP_C_LENGTHS if l <= max_ctx]
+    lengths_short = [l for l in SWEEP_C_LENGTHS_SHORT if l <= max_ctx]
     experiments = []
     for ctx_type in SWEEP_C_CONTEXT_TYPES:
+        # Use shorter length list for expensive context types
+        lengths = lengths_short if ctx_type in SLOW_CONTEXT_TYPES else lengths_full
         # Each context type runs as a separate experiment for resumability
         experiments.append({
             "model": DEFAULT_MODEL,
@@ -239,6 +264,7 @@ def build_experiment_command(exp: dict) -> list[str]:
         "--context-lengths", lengths_str,
         "--n-trials", "3",
         "--output-dir", str(output_dir),
+        "--track-trajectory",
     ]
 
     # Enable thinking mode if requested
